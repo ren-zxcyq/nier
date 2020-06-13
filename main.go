@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	. "fmt"
 	"log"
 	"os/exec"
+	"strings"
 )
 
 var targetHost string
@@ -13,7 +15,7 @@ var subdomainEnumeration bool
 
 //	Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
 //	@TODO	-	go doc os/exec.Cmd
-func execCmd() {
+func execCmdEx() {
 
 	/*	@EXAMPLE
 		//	This works but once thre process is Run() -	Need to w8 for the process to end
@@ -45,15 +47,63 @@ func execCmd() {
 	*/
 	//	PING WORKS
 	//out, err := exec.Command("ping", "www.google.com").Output()
-	out, err := exec.Command("ping", targetHost).Output()
+	//out, err := exec.Command("ping", targetHost).Output()
 	//	NMAP WORKS
 	//	@TODO	Decide & Handle OS type
 	//out, err := exec.Command("C:/Program Files (x86)/Nmap/nmap", "-T5", "-sSV", targetHost).Output()
+	out, err := exec.Command("nmap", "-T5", "-sSV", targetHost).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 	Printf("Nmap output is \n%s", out)
 	//log.Println("log")
+}
+
+func execCmd(cmd string, arg ...string) string {
+	/*	This Works
+		// var l int = len(arg)
+		// var i int = 0
+		var argstr string
+		//for i; i < l; i++ {
+		//	argstr += Fprintf("%s,", arg[i])
+		//}
+		//for _, i := range arg {
+
+		fmt.Println("HIT")
+		if len(arg) > 1 {
+			argstr = "\"" + strings.Join(arg, "\", ")
+		} else {
+			argstr = arg[0]
+		}
+
+		fmt.Println(argstr)
+		out, err := exec.Command(cmd, argstr).Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+		Printf("\n%s output is: \n%s", cmd, out)
+	*/
+
+	var argstr string
+	//for i; i < l; i++ {
+	//	argstr += Fprintf("%s,", arg[i])
+	//}
+	//for _, i := range arg {
+
+	fmt.Println("HIT")
+	if len(arg) > 1 {
+		argstr = "\"" + strings.Join(arg, "\", ")
+	} else {
+		argstr = arg[0]
+	}
+
+	fmt.Println(argstr)
+	out, err := exec.Command(cmd, argstr).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s", cmd, out, err) //Sprintf() questionable
+	return res
 }
 
 func main() {
@@ -101,7 +151,12 @@ func main() {
 			os.Exit(1)
 		}
 	*/
-	execCmd()
+	//execCmdEx()
+	var nmap string = execCmd("nmap", "-T5", "-sSV", targetHost)
+	var ping string = execCmd("ping", targetHost)
+
+	Printf(ping)
+	Printf(nmap)
 
 	/*
 		 *	@TODO	test if multiple flagsets can be used at a time
