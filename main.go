@@ -2,16 +2,17 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	. "fmt"
 	"log"
-	"os/exec"
+	"os/exec" //	Launch SubProcess
+	"runtime" //	Identify OS
 	"strings"
 )
 
 var targetHost string
 var targetPort int
 var subdomainEnumeration bool
+var sessionTokens string
 
 //	Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
 //	@TODO	-	go doc os/exec.Cmd
@@ -60,7 +61,7 @@ func execCmdEx() {
 }
 
 func execCmd(cmd string, arg ...string) string {
-	/*	This Works
+	/*	@EXAMPLE
 		// var l int = len(arg)
 		// var i int = 0
 		var argstr string
@@ -85,28 +86,43 @@ func execCmd(cmd string, arg ...string) string {
 	*/
 
 	var argstr string
-	//for i; i < l; i++ {
-	//	argstr += Fprintf("%s,", arg[i])
-	//}
-	//for _, i := range arg {
-
-	fmt.Println("HIT")
 	if len(arg) > 1 {
 		argstr = "\"" + strings.Join(arg, "\", ")
 	} else {
 		argstr = arg[0]
 	}
-
-	fmt.Println(argstr)
+	//fmt.Println(argstr)
 	out, err := exec.Command(cmd, argstr).Output()
 	if err != nil {
 		log.Fatal(err)
 	}
-	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s", cmd, out, err) //Sprintf() questionable
+	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s\n\n", cmd, out, err) //Sprintf() questionable
 	return res
 }
 
+/*
+	Identifies & Returns Host OS as per: https://golangbyexample.com/detect-os-golang/
+	//	runtime.GOOS
+	//	runtime.GOARCH
+	//	for a full list of OS & ARCH	->		go tool dist list
+*/
+func detectOS() string {
+	os := runtime.GOOS
+	switch os {
+	case "windows":
+		return Sprintf("Windows")
+	case "darwin":
+		return Sprintf("Mac OS")
+	case "linux":
+		return Sprintf("Linux")
+	default:
+		return Sprintf("%s", os)
+	}
+}
+
 func main() {
+
+	//	Arg Definitions
 	/*
 		type Flag struct {
 			Name     string // name as it appears on command line
@@ -129,20 +145,28 @@ func main() {
 		//	-h or help automatically generated
 		//
 	*/
-
 	var targetHostPointer = flag.String("host", "127.0.0.1", "Identifies target host - i.e. 127.0.0.1 or www.myshop.com")
 	var targetPortPointer = flag.Int("p", 80, "Target Port")
 	var subdomainEnumerationPointer = flag.Bool("s", false, "Enable Subdomain Enumeration") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
 
+	var sessionTokensPointer = flag.String("sess", "", "Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2")
+
+	//	Parse args	-	They return pointers
 	flag.Parse() //	execute cmd-line parsing
 
+	//	Show args
+	Println("Selected:", "\n-------------")
+	Println("Current OS:", detectOS())
 	Println("targethost:", *targetHostPointer)
 	Println("targetport:", *targetPortPointer)
 	Println("subdomainEnumeration:", *subdomainEnumerationPointer)
+	Println("sessionTokens:", *sessionTokensPointer)
 
 	targetHost = *targetHostPointer
 	targetPort = *targetPortPointer
 	subdomainEnumeration = *subdomainEnumerationPointer
+	sessionTokens = *sessionTokensPointer
+	Println("-------------")
 
 	/*	@EXAMPLE
 		textPtr := flag.String("text", "", "Text to parse. (Required)")
@@ -154,9 +178,11 @@ func main() {
 	//execCmdEx()
 	var nmap string = execCmd("nmap", "-T5", "-sSV", targetHost)
 	var ping string = execCmd("ping", targetHost)
+	//var nikto string = execCmd("nikto", "-h", targetHost)	//	Breaks when nikto or the requested tool is not installed
 
 	Printf(ping)
 	Printf(nmap)
+	//Printf(nikto)
 
 	/*
 		 *	@TODO	test if multiple flagsets can be used at a time
