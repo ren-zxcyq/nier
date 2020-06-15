@@ -2,14 +2,15 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	. "fmt"
 	"log"
+	"os"
 	"os/exec" //	Launch SubProcess
 	"runtime" //	Identify OS
 	"strings"
 )
 
+var cOS string
 var targetHost string
 var targetPort int
 var subdomainEnumeration bool
@@ -17,123 +18,8 @@ var sessionTokens string
 
 //	Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
 //	@TODO	-	go doc os/exec.Cmd
-func execCmdEx() {
 
-	/*	@EXAMPLE
-		//	This works but once thre process is Run() -	Need to w8 for the process to end
-		//		https://stackoverflow.com/a/15815730
-		//
-		cmd := exec.Command("nmap", "-sSV -T5 127.0.0.1")
-		cmd.Run() // and wait
-		//cmd.Start()
-		stdout, err := cmd.Output()
-		if err != nil {
-			Println(err.Error())
-			return
-		}
-
-		Print(string(stdout))
-	*/
-
-	/*	@EXAMPLE
-		//	https://stackoverflow.com/a/15815730
-		//
-		//		//	where out =>	stdout
-		//
-		out, err := exec.Command("date").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		Printf("The date is %s\n", out)
-
-	*/
-	//	PING WORKS
-	//out, err := exec.Command("ping", "www.google.com").Output()
-	//out, err := exec.Command("ping", targetHost).Output()
-	//	NMAP WORKS
-	//	@TODO	Decide & Handle OS type
-	//out, err := exec.Command("C:/Program Files (x86)/Nmap/nmap", "-T5", "-sSV", targetHost).Output()
-	out, err := exec.Command("nmap", "-T5", "-sSV", targetHost).Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-	Printf("Nmap output is \n%s", out)
-	//log.Println("log")
-}
-
-// Trims trailing given character
-func TrimSuffix(s, suffix string) string {
-	if strings.HasSuffix(s, suffix) {
-		s = s[:len(s)-len(suffix)]
-	}
-	return s
-}
-
-func execCmd(cmd string, arg ...string) string {
-	/*	@EXAMPLE
-		// var l int = len(arg)
-		// var i int = 0
-		var argstr string
-		//for i; i < l; i++ {
-		//	argstr += Fprintf("%s,", arg[i])
-		//}
-		//for _, i := range arg {
-
-		fmt.Println("HIT")
-		if len(arg) > 1 {
-			argstr = "\"" + strings.Join(arg, "\", ")
-		} else {
-			argstr = arg[0]
-		}
-
-		fmt.Println(argstr)
-		out, err := exec.Command(cmd, argstr).Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-		Printf("\n%s output is: \n%s", cmd, out)
-	*/
-	Println("Here")
-	var argstr []string
-	var l int = len(arg)
-	var i int = 0
-	if l > 1 {
-		for i < l {
-			Println("l", arg[i])
-			if i == l-1 {
-				argstr = append(argstr, "\""+arg[i]+"\"")
-			} else {
-				argstr = append(argstr, "\""+arg[i]+"\", ")
-			}
-			//argstr += "\"" + arg[i] + "\", "
-			i++
-		}
-		//		argstr = "\"" + strings.Join(arg, "\", ")
-
-		// Trim trailing , from last item in the array
-		//argstr = TrimSuffix(argstr, ",")
-	} else {
-		argstr = append(argstr, arg[0])
-	}
-	Println("Here")
-	fmt.Println(argstr)
-
-	out, err := exec.Command(cmd, argstr[0:]...).Output()
-	if err != nil {
-		Println("err")
-		log.Fatal(err)
-	}
-	Println("Here")
-
-	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s\n\n", cmd, out, err) //Sprintf() questionable
-	Println("Here")
-
-	//cmd.StdoutPipe()
-
-	return res
-}
-
-func ex(cmd string) string {
+func execCmd(cmd string) string {
 	var s []string = strings.Split(cmd, " ")
 
 	out, err := exec.Command(s[0], s[1:]...).Output()
@@ -167,6 +53,33 @@ func detectOS() string {
 	}
 }
 
+/*	@TODO	check if it works correctly
+ *	Check if file Exists	-	as per:	https://golangbyexample.com/check-if-file-or-directory-exists-go/
+ *	Basically if it returns nil -> Everything is OK
+ */
+func checkFile(fileNamePath string) {
+	//	of type os.FileInfo
+	fileinfo, err := os.Stat(fileNamePath)
+	if os.IsNotExist(err) {
+		log.Fatal("Error while reading:", fileNamePath, ". File does not exist.")
+	}
+	log.Println(fileinfo)
+	//Println(fileinfo)	//	Printing shows just <nil>
+}
+
+/*	@TODO	check if it works correctly
+ *	Check if folder Exists	-	as per:	https://golangbyexample.com/check-if-file-or-directory-exists-go/
+ */
+func checkFolder(folderNamePath string) {
+	//
+	folderInfo, err := os.Stat(folderNamePath)
+	if os.IsNotExist(err) {
+		log.Fatal("Folder does not exist")
+	}
+	log.Println(folderInfo)
+	//Println(folderInfo)	//	Printing shows just <nil>
+}
+
 func main() {
 
 	//	Arg Definitions
@@ -192,6 +105,7 @@ func main() {
 		//	-h or help automatically generated
 		//
 	*/
+	cOS = detectOS()
 	var targetHostPointer = flag.String("host", "127.0.0.1", "Identifies target host - i.e. 127.0.0.1 or www.myshop.com")
 	var targetPortPointer = flag.Int("p", 80, "Target Port")
 	var subdomainEnumerationPointer = flag.Bool("s", false, "Enable Subdomain Enumeration") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
@@ -203,7 +117,7 @@ func main() {
 
 	//	Show args
 	Println("Selected:", "\n-------------")
-	Println("Current OS:", detectOS())
+	Println("Current OS:", cOS)
 	Println("targethost:", *targetHostPointer)
 	Println("targetport:", *targetPortPointer)
 	Println("subdomainEnumeration:", *subdomainEnumerationPointer)
@@ -227,10 +141,30 @@ func main() {
 	//var ping string = execCmd("ping", targetHost)
 	//var nikto string = execCmd("nikto", "-h", targetHost)	//	Breaks when nikto or the requested tool is not installed
 
-	var ping string = ex("ping -c 1 " + targetHost)
+	var pcount string
+	if cOS == "Windows" {
+		pcount = "n"
+	} else if cOS == "Mac OS" {
+		pcount = "c"
+	} else if cOS == "Linux" {
+		pcount = "c"
+	} else {
+		pcount = "c" //	If none of the 3 use the *nix variation
+	}
+	var ping string = execCmd("ping -" + pcount + " 1 " + targetHost)
 	Printf(ping)
 	//Printf(nmap)
 	//Printf(nikto)
+
+	Println("File & Folder Utilities:", "\n-------------")
+	checkFile("/c:/Users/blush/Desktop/tools_509_web.txt") //	RETURNS SAME
+	checkFile("/c:/Users/blush/Desktop/tools_.txt")        //	AS THIS
+	checkFolder("/c:/Users/blush/Desktop/int")
+
+	// go doc windows
+
+	//	@EXAMPLE
+	//os.Exit(0)	//	Can pass in - 1,2,3,4	-	DEFER'd actions won't be run
 
 	/*
 		 *	@TODO	test if multiple flagsets can be used at a time
@@ -241,5 +175,8 @@ func main() {
 
 	//	@TODO	Perform Checks on the flags
 	//	@TODO	Assign them to program flags
-
+	//	@TODO	Add tools:	httprint, WPScan, WhatWeb, BlindElephant
+	//	@TODO	gobuster
+	//	@TODO	sqlmap
+	//	@TODO	xxs
 }
