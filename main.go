@@ -157,9 +157,6 @@ func main() {
 	//Printf(nikto)
 
 	Println("File & Folder Utilities:", "\n-------------")
-	checkFile("/c:/Users/blush/Desktop/tools_509_web.txt") //	RETURNS SAME
-	checkFile("/c:/Users/blush/Desktop/tools_.txt")        //	AS THIS
-	checkFolder("/c:/Users/blush/Desktop/int")
 
 	// go doc windows
 
