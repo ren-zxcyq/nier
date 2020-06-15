@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	. "fmt"
 	"log"
 	"os/exec" //	Launch SubProcess
@@ -60,6 +61,14 @@ func execCmdEx() {
 	//log.Println("log")
 }
 
+// Trims trailing given character
+func TrimSuffix(s, suffix string) string {
+	if strings.HasSuffix(s, suffix) {
+		s = s[:len(s)-len(suffix)]
+	}
+	return s
+}
+
 func execCmd(cmd string, arg ...string) string {
 	/*	@EXAMPLE
 		// var l int = len(arg)
@@ -84,19 +93,57 @@ func execCmd(cmd string, arg ...string) string {
 		}
 		Printf("\n%s output is: \n%s", cmd, out)
 	*/
+	Println("Here")
+	var argstr []string
+	var l int = len(arg)
+	var i int = 0
+	if l > 1 {
+		for i < l {
+			Println("l", arg[i])
+			if i == l-1 {
+				argstr = append(argstr, "\""+arg[i]+"\"")
+			} else {
+				argstr = append(argstr, "\""+arg[i]+"\", ")
+			}
+			//argstr += "\"" + arg[i] + "\", "
+			i++
+		}
+		//		argstr = "\"" + strings.Join(arg, "\", ")
 
-	var argstr string
-	if len(arg) > 1 {
-		argstr = "\"" + strings.Join(arg, "\", ")
+		// Trim trailing , from last item in the array
+		//argstr = TrimSuffix(argstr, ",")
 	} else {
-		argstr = arg[0]
+		argstr = append(argstr, arg[0])
 	}
-	//fmt.Println(argstr)
-	out, err := exec.Command(cmd, argstr).Output()
+	Println("Here")
+	fmt.Println(argstr)
+
+	out, err := exec.Command(cmd, argstr[0:]...).Output()
 	if err != nil {
+		Println("err")
 		log.Fatal(err)
 	}
+	Println("Here")
+
 	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s\n\n", cmd, out, err) //Sprintf() questionable
+	Println("Here")
+
+	//cmd.StdoutPipe()
+
+	return res
+}
+
+func ex(cmd string) string {
+	var s []string = strings.Split(cmd, " ")
+
+	out, err := exec.Command(s[0], s[1:]...).Output()
+	if err != nil {
+		Println("err")
+		log.Fatal("Err in ex")
+	}
+
+	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s\n\n", cmd, out, err) //Sprintf() questionable
+
 	return res
 }
 
@@ -176,12 +223,13 @@ func main() {
 		}
 	*/
 	//execCmdEx()
-	var nmap string = execCmd("nmap", "-T5", "-sSV", targetHost)
-	var ping string = execCmd("ping", targetHost)
+	//var nmap string = execCmd("nmap", "-T5", "-sSV", targetHost)
+	//var ping string = execCmd("ping", targetHost)
 	//var nikto string = execCmd("nikto", "-h", targetHost)	//	Breaks when nikto or the requested tool is not installed
 
+	var ping string = ex("ping -c 1 " + targetHost)
 	Printf(ping)
-	Printf(nmap)
+	//Printf(nmap)
 	//Printf(nikto)
 
 	/*
