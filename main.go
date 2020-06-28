@@ -9,6 +9,7 @@ import (
 	"os/exec" //	Launch SubProcess
 	"runtime" //	Identify OS
 	"strings"
+	//"syscall"	//
 )
 
 var cOS string
@@ -25,7 +26,7 @@ func execCmd(cmd string) string {
 
 	out, err := exec.Command(s[0], s[1:]...).Output()
 	if err != nil {
-		Println("err")
+		log.Fatal(err.Error())
 		log.Fatal("Err in ex")
 	}
 
@@ -34,9 +35,10 @@ func execCmd(cmd string) string {
 	return res
 }
 
+//	This will probably be removed
 //	Opens another program in go		-	Reading Std Output Stream
 //	@TODO	Check	https://gobyexample.com/spawning-processes
-func execCmdInt(cmd string) {
+func execCmdDontGoForThis(cmd string) {
 
 	var s []string = strings.Split(cmd, " ")
 
@@ -62,6 +64,42 @@ func execCmdInt(cmd string) {
 	}
 
 	csubprocess.Wait() //	Wait for the Process to Exit
+}
+
+//	Opens another program in go		-	Reading Std Output Stream
+//
+//	This:
+//	https://github.com/kioopi/extedit/blob/master/extedit.go
+//	Led to:
+//	https://www.reddit.com/r/golang/comments/2nd4pq/how_can_i_open_an_interactive_subprogram_from/
+func execInteractiveCmd(cmd string) {
+
+	var s []string = strings.Split(cmd, " ")
+
+	var res string = Sprintf("\n%s output is: \n-------------\n", s[0]) //Sprintf() questionable
+	Print(res)
+
+	//subprocess := exec.Command("sqlmap", "-u 192.168.1.20/index.php", "--forms", "--tamper=randomcase,space2comment", "--all")
+	subprocess := exec.Command(s[0], s[1:]...)
+	//stdout, suberr := subprocess.StdoutPipe()
+	//stderr, suberrerr := subprocess.StderrPipe()
+
+	subprocess.Stdin = os.Stdin
+	subprocess.Stdout = os.Stdout
+	subprocess.Stderr = os.Stderr
+
+	//	This works on Debian	=>	@TODO - Figure out how to - crossplatform terminate child processes
+	// if cOS == "Linux" {
+	// 	subprocess.SysProcAttr = &syscall.SysProcAttr{Pdeathsig: syscall.SIGKILL}
+	// 	// {
+	// 	// 	cmd := exec.Command("/bin/sh", "-c", "watch date > date.txt")
+	// 	// 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	// 	// 	syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	// 	// }
+	// }
+	subprocess.Start()
+
+	subprocess.Wait() //	Wait for the Process to Exit
 }
 
 //	This will probably be removed
@@ -267,6 +305,8 @@ func main() {
 	//var ping string = execCmd("ping", targetHost)
 	//var nikto string = execCmd("nikto", "-h", targetHost)	//	Breaks when nikto or the requested tool is not installed
 
+	//	Exec
+	//	Adjust ping flag
 	var pcount string
 	if cOS == "Windows" {
 		pcount = "n"
@@ -278,21 +318,26 @@ func main() {
 		pcount = "c" //	If none of the 3 use the *nix variation
 	}
 
-	//	Exec
+	var example string = execCmd("asdf")
+	Printf(example)
+
 	var ping string = execCmd("ping -" + pcount + " 1 " + targetHost)
 	Printf(ping)
+
 	var nmap string = execCmd("nmap -sSV -T5 " + targetHost)
 	Printf(nmap)
-	var nikto string = execCmd("nikto -h " + targetHost)
-	Printf(nikto)
+	//var nikto string = execCmd("nikto -h " + targetHost)
+	//Printf(nikto)
 
 	// var gobuster string = execCmd("./gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
 	// // //	-c 'PHPSESSID:bp78fb8ser34n0hc83v3eu85n6; SecretCookie:VzuuL2gfLJWNnTSwn2kuLv5wo20vBwpjAGWwLJD2LwDkAJL0ZwplLmR5BQMuLGyuAGOuA2ZmBwR1Amt2Awp1ZmH%3D'
 	// Printf(gobuster)
 	//execCmd("./gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
-	execCmdInt("./gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
-	execCmdInt("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
 
+	//THIS WORKS	@TODO: Consider gobuster for non-interactive
+	execInteractiveCmd("./gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
+	//execCmdInt("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
+	execInteractiveCmd("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
 	//Println("File & Folder Utilities:", "\n-------------")
 
 	// go doc windows
