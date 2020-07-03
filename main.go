@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	. "fmt"
 	"io"
 	"log"
@@ -12,18 +13,30 @@ import (
 	"path/filepath"
 	"runtime" //	Identify OS
 	"strings"
-	"syscall" //
 
+	//
 	"github.com/ren-zxcyq/Nier/nier/handleFolder"
 	"github.com/ren-zxcyq/Nier/nier/handlePdf"
 )
 
+var configFilePath string
 var cOS string
 var targetHost string
 var targetPort int
 var subdomainEnumeration bool
 var outputFolder string
 var sessionTokens string
+
+func printBanner() {
+	var banner string = "\r\n\t⣤⡄⠀⠀⣤⢠⢠⠀⠀⠀⠀⣤⠄⠀⢤⡀⠀⠀⠀⢀⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⢀⢀⣤⠀⠀⠀⠀⣒⣒"
+	banner += "\r\n\t⡇⠙⢦⠀⣿⠀⡄⠀⣀⡀⠀⣿⠀⢀⡼⠃⢠⠀⠀⡘⢻⠀⣀⠀⢀⡀⣰⣀⠀⢀⣀⠀⠁⡀⠀⣀⠀⢨⣄⠠⠤⣤⠇⠿⣢⣀"
+	banner += "\r\n\t⡇⠀⠈⠳⣿⠀⡇⡜⠀⢹⡆⣿⠚⠙⣆⠀⠀⠀⢀⢃⣸⡇⢸⠀⠀⡇⢸⠀⢰⠁⠈⡃⡄⣵⡆⢐⣖⠈⣷⡾⠇⢨⠀⣽⢡⡌⡆⡧⢺"
+	banner += "\r\n\t⡇⠀⠀⠀⣿⠀⡇⣷⠊⠁⠀⣿⠀⠀⢹⡀⠐⠀⡘⠉⠀⡷⠸⠀⠀⡃⡈⣶⡎⢶⣴⠇⡇⣿⡇⢸⣿⠀⠋⣴⡇⢸⠀⣿⢘⡅⡇⡇⢸"
+	banner += "\r\n\t⠓⠀⠀⠐⠛⠐⠓⠈⠓⠒⠃⠛⠂⠀⠘⠃⠀⠀⠃⠀⠀⠓⠂⠓⠂⠃⠃⠈⠚⠀⠉⠚⠁⠙⠀⠘⠛⠀⠂⠉⠘⠈⠃⠈⠓⠐⠃⠃⠘"
+	banner += "\r\n\r\n"
+	fmt.Printf("%s", banner)
+
+}
 
 /*
  *	Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
@@ -143,7 +156,7 @@ func execInteractiveCmd(cmd string) {
 	subprocess.Stderr = os.Stderr
 	Println("JUST ASSIGNED subprocess.Stdin = os.Stdin")
 	//	This works on Debian	=>	@TODO - Figure out how to - crossplatform terminate child processes
-	subprocess.SysProcAttr = &syscall.SysProcAttr{Pdeathsig: syscall.SIGKILL}
+	//subprocess.SysProcAttr = &syscall.SysProcAttr{Pdeathsig: syscall.SIGKILL}
 
 	subprocess.Start()
 
@@ -269,14 +282,16 @@ func detectOS() string {
  *	Check if file Exists	-	as per:	https://golangbyexample.com/check-if-file-or-directory-exists-go/
  *	Basically if it returns nil -> Everything is OK
  */
-func checkFile(fileNamePath string) {
+func checkFile(fileNamePath string) string { //	Returns os.FileInfo
 	//	of type os.FileInfo
 	fileinfo, err := os.Stat(fileNamePath)
 	if os.IsNotExist(err) {
 		log.Fatal("Error while reading:", fileNamePath, ". File does not exist.")
 	}
-	log.Println(fileinfo)
+	//log.Println(fileinfo)
+	//	The above prints	-	&{.config 32 {4067314593 30822657} {4067314593 30822657} {4067314593 30822657} 0 0 0 0 {0 0} /root/go/src/github.com/ren-zxcyq/Nier/nier/.config 0 0 0 false}
 	//Println(fileinfo)	//	Printing shows just <nil>
+	return fileinfo.Name()
 }
 
 /*	@TODO	check if it works correctly
@@ -317,6 +332,8 @@ func setUpFlags() {
 		//
 	*/
 	cOS = detectOS()
+	cwd, _ := os.Getwd()
+	configFilePath = path.Join(cwd, ".config")
 	var targetHostPointer = flag.String("host", "127.0.0.1", "Identifies target host - i.e. 127.0.0.1 or www.myshop.com")
 	var targetPortPointer = flag.Int("p", 80, "Target Port")
 	var subdomainEnumerationPointer = flag.Bool("s", false, "Enable Subdomain Enumeration") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
@@ -328,6 +345,7 @@ func setUpFlags() {
 
 	//	Show args
 	Println("Selected:", "\n-------------")
+	Println("Loading Config:", configFilePath)
 	Println("Current OS:", cOS)
 	Println("targethost:", *targetHostPointer)
 	Println("targetport:", *targetPortPointer)
@@ -339,7 +357,7 @@ func setUpFlags() {
 	targetPort = *targetPortPointer
 	subdomainEnumeration = *subdomainEnumerationPointer
 	outputFolder = *outputFolderPointer
-	cwd, _ := os.Getwd()
+	// cwd, _ := os.Getwd()
 	outputFolder = path.Join(cwd, outputFolder)
 	sessionTokens = *sessionTokensPointer
 	Println("-------------")
@@ -457,20 +475,21 @@ func test() {
 
 	var nmap string = execCmd("nmap -sSV -T5 -oA " + nmapOutFilesUrl + " " + targetHost)
 	Println(nmap)
+	/*	//	Uncomment - to - run tools
+		var niktoOutFile string = path.Join(outputFolder, "nikto.txt")
+		var nikto string = execCmd("nikto -h " + targetHost + " -output " + niktoOutFile)
+		Printf(nikto)
 
-	var niktoOutFile string = path.Join(outputFolder, "nikto.txt")
-	var nikto string = execCmd("nikto -h " + targetHost + " -output " + niktoOutFile)
-	Printf(nikto)
+		var gobusterFileUrl string = path.Join(outputFolder, "gobuster.txt")
+		Println(gobusterFileUrl)
+		//
 
-	var gobusterFileUrl string = path.Join(outputFolder, "gobuster.txt")
-	Println(gobusterFileUrl)
-	//
-
-	//	THIS WORKS NORMALLY
-	//execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
-	//	PEEEERFEEECT	@TODO	test with -o
-	execInteractive("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
-	execInteractive("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
+		//	THIS WORKS NORMALLY
+		//execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
+		//	PEEEERFEEECT	@TODO	test with -o
+		execInteractive("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
+		execInteractive("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
+	*/
 
 	//	?Alt?
 	//execCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php -u=" + targetHost + " | tee "+ gobusterFilesUrl)
@@ -480,7 +499,47 @@ func test() {
 	//execInteractiveCmd("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")	// 2>&1 | tee " + sqlmapFileUrl)
 }
 
+//	Return list by reading absPath file line-by-line
+func returnLinesFromFile(absPath string) []string {
+	tfile, err := os.Open(absPath)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer tfile.Close()
+
+	var tscanner = bufio.NewScanner(tfile)
+	tlines := []string{}
+
+	for tscanner.Scan() {
+		tlines = append(tlines, tscanner.Text())
+	}
+
+	return tlines
+
+}
+
+func printConfigFile() {
+	cwd, _ := os.Getwd()
+	configFilePath = path.Join(cwd, ".config")
+
+	Println("Loading Config:", configFilePath)
+
+	//	File exists
+	Println("Loading Utilities From:\n-------------")
+	var utils []string = returnLinesFromFile(configFilePath)
+
+	var i int = 0
+	for i < len(utils) {
+		Println(utils[i])
+		i++
+	}
+}
+
 func main() {
+
+	printBanner()
+	printConfigFile()
+
 	setUpFlags()
 	generateFolder()
 	generateReportFile()
