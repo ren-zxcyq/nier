@@ -4,35 +4,89 @@ import (
 	"bufio"
 	"flag"
 	. "fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec" //	Launch SubProcess
+	"path"
+	"path/filepath"
 	"runtime" //	Identify OS
 	"strings"
-	//"syscall"	//
+	"syscall" //
+
+	"github.com/ren-zxcyq/Nier/nier/handleFolder"
+	"github.com/ren-zxcyq/Nier/nier/handlePdf"
 )
 
 var cOS string
 var targetHost string
 var targetPort int
 var subdomainEnumeration bool
+var outputFolder string
 var sessionTokens string
 
-//	Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
-//	@TODO	-	go doc os/exec.Cmd
-
+/*
+ *	Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
+ *	@TODO	-	go doc os/exec.Cmd
+ */
 func execCmd(cmd string) string {
 	var s []string = strings.Split(cmd, " ")
 
 	out, err := exec.Command(s[0], s[1:]...).Output()
 	if err != nil {
+		//Printf("Err in ex", err.Error())
 		log.Fatal(err.Error())
-		log.Fatal("Err in ex")
 	}
 
 	var res string = Sprintf("\n%s output is: \n-------------\n%s\n%s\n\n", cmd, out, err) //Sprintf() questionable
 
 	return res
+}
+
+/*
+ *	Executes Subprocess interactively - Separates StdOut & StdErr in separate files - Just in case
+ *	@TODO	-	verify for sqlmap-shell
+ */
+func execInteractive(cmd string) {
+
+	var s []string = strings.Split(cmd, " ")
+
+	var res string = Sprintf("\n%s output is: \n-------------\n", s[0]) //Sprintf() questionable
+	Print(res)
+
+	//!was NOT commented OUT
+	//f, err := os.OpenFile(outputFolder + "/" + s[0] + ".out", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	Println("Creating FILE")
+	var e []string = strings.Split(s[0], "/")
+	var toolname string = e[len(e)-1]
+	of, err := os.Create(outputFolder + "/" + toolname + "_out")
+	ef, err := os.Create(outputFolder + "/" + toolname + "_err")
+	if err != nil {
+		Printf("error opening file: %v", err)
+	}
+	defer ef.Close()
+	defer of.Close()
+
+	//	FROM STACKOVERFLOW
+	//f, _ := os.Create("file")
+	//cmd.Stdout = io.MultiWriter(os.Stdout, f)
+
+	subprocess := exec.Command(s[0], s[1:]...)
+
+	subprocess.Stdin = os.Stdin
+
+	//!was NOT commented out
+	// redirect output to files
+	//subprocess.Stdout = f
+	//subprocess.Stderr = f
+
+	subprocess.Stdout = io.MultiWriter(os.Stdout, of)
+	subprocess.Stderr = io.MultiWriter(ef)
+
+	subprocess.Start()
+
+	subprocess.Wait() //	Wait for the Process to Exit
+
 }
 
 //	This will probably be removed
@@ -73,12 +127,12 @@ func execCmdDontGoForThis(cmd string) {
 //	Led to:
 //	https://www.reddit.com/r/golang/comments/2nd4pq/how_can_i_open_an_interactive_subprogram_from/
 func execInteractiveCmd(cmd string) {
-
+	Println("INTERACTIVE CMD")
 	var s []string = strings.Split(cmd, " ")
 
 	var res string = Sprintf("\n%s output is: \n-------------\n", s[0]) //Sprintf() questionable
 	Print(res)
-
+	Println("SHOULLDA OUTPUT")
 	//subprocess := exec.Command("sqlmap", "-u 192.168.1.20/index.php", "--forms", "--tamper=randomcase,space2comment", "--all")
 	subprocess := exec.Command(s[0], s[1:]...)
 	//stdout, suberr := subprocess.StdoutPipe()
@@ -87,16 +141,10 @@ func execInteractiveCmd(cmd string) {
 	subprocess.Stdin = os.Stdin
 	subprocess.Stdout = os.Stdout
 	subprocess.Stderr = os.Stderr
-
+	Println("JUST ASSIGNED subprocess.Stdin = os.Stdin")
 	//	This works on Debian	=>	@TODO - Figure out how to - crossplatform terminate child processes
-	// if cOS == "Linux" {
-	// 	subprocess.SysProcAttr = &syscall.SysProcAttr{Pdeathsig: syscall.SIGKILL}
-	// 	// {
-	// 	// 	cmd := exec.Command("/bin/sh", "-c", "watch date > date.txt")
-	// 	// 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	// 	// 	syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
-	// 	// }
-	// }
+	subprocess.SysProcAttr = &syscall.SysProcAttr{Pdeathsig: syscall.SIGKILL}
+
 	subprocess.Start()
 
 	subprocess.Wait() //	Wait for the Process to Exit
@@ -244,8 +292,7 @@ func checkFolder(folderNamePath string) {
 	//Println(folderInfo)	//	Printing shows just <nil>
 }
 
-func main() {
-
+func setUpFlags() {
 	//	Arg Definitions
 	/*
 		type Flag struct {
@@ -273,7 +320,7 @@ func main() {
 	var targetHostPointer = flag.String("host", "127.0.0.1", "Identifies target host - i.e. 127.0.0.1 or www.myshop.com")
 	var targetPortPointer = flag.Int("p", 80, "Target Port")
 	var subdomainEnumerationPointer = flag.Bool("s", false, "Enable Subdomain Enumeration") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
-
+	var outputFolderPointer = flag.String("o", "Nier_Automata_Report", "Output Folder PATH RELATIVE to cwd - in format: -o \"./report\"")
 	var sessionTokensPointer = flag.String("sess", "", "Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2")
 
 	//	Parse args	-	They return pointers
@@ -285,11 +332,15 @@ func main() {
 	Println("targethost:", *targetHostPointer)
 	Println("targetport:", *targetPortPointer)
 	Println("subdomainEnumeration:", *subdomainEnumerationPointer)
+	Println("outputFolder:", *outputFolderPointer)
 	Println("sessionTokens:", *sessionTokensPointer)
 
 	targetHost = *targetHostPointer
 	targetPort = *targetPortPointer
 	subdomainEnumeration = *subdomainEnumerationPointer
+	outputFolder = *outputFolderPointer
+	cwd, _ := os.Getwd()
+	outputFolder = path.Join(cwd, outputFolder)
 	sessionTokens = *sessionTokensPointer
 	Println("-------------")
 
@@ -300,6 +351,13 @@ func main() {
 			os.Exit(1)
 		}
 	*/
+}
+
+/*
+ *	@TODO - MUST CLEANUP
+ */
+func runTools() {
+
 	//execCmdEx()
 	//var nmap string = execCmd("nmap", "-T5", "-sSV", targetHost)
 	//var ping string = execCmd("ping", targetHost)
@@ -318,13 +376,10 @@ func main() {
 		pcount = "c" //	If none of the 3 use the *nix variation
 	}
 
-	var example string = execCmd("asdf")
-	Printf(example)
-
 	var ping string = execCmd("ping -" + pcount + " 1 " + targetHost)
 	Printf(ping)
 
-	var nmap string = execCmd("nmap -sSV -T5 " + targetHost)
+	var nmap string = execCmd("nmap -sSV -T5 -oA" + outputFolder + " " + targetHost)
 	Printf(nmap)
 	//var nikto string = execCmd("nikto -h " + targetHost)
 	//Printf(nikto)
@@ -354,8 +409,80 @@ func main() {
 
 	//	@TODO	Perform Checks on the flags
 	//	@TODO	Assign them to program flags
-	//	@TODO	Add tools:	httprint, WPScan, WhatWeb, BlindElephant
+	//	@TODO	Add tools:	httprint, WPScan, WhatWeb, BlindElephant, Wapiti
 	//	@TODO	gobuster
 	//	@TODO	sqlmap
-	//	@TODO	xxs
+	//	@TODO	xxs	-	XSSSniper (Don't worry about if it works now)
+}
+
+func generateReportFile() {
+	Println("Initiating Document Creation Process")
+	//handlePdf.CreateDoc(outputFolder)
+	handlePdf.CreatePdf(outputFolder)
+}
+
+func generateFolder() {
+	Println("Initiating Document Creation Process")
+
+	handleFolder.CreateFolder(outputFolder)
+
+}
+
+func test() {
+
+	//execCmdEx()
+	//var nmap string = execCmd("nmap", "-T5", "-sSV", targetHost)
+	//var ping string = execCmd("ping", targetHost)
+	//var nikto string = execCmd("nikto", "-h", targetHost)	//	Breaks when nikto or the requested tool is not installed
+
+	//	Exec
+	//	Adjust ping flag
+	var pcount string
+	if cOS == "Windows" {
+		pcount = "n"
+	} else if cOS == "Mac OS" {
+		pcount = "c"
+	} else if cOS == "Linux" {
+		pcount = "c"
+	} else {
+		pcount = "c" //	If none of the 3 use the *nix variation
+	}
+
+	var ping string = execCmd("ping -" + pcount + " 1 " + targetHost)
+	Printf(ping)
+	var nmapOutFilesUrl string = path.Join(outputFolder, "nmap_1_sSV")
+
+	nmapOutFilesUrl = filepath.ToSlash(nmapOutFilesUrl)
+	//nmapOutFilesUrl = strings.Replace(nmapOutFilesUrl, ":", "", -1)
+
+	var nmap string = execCmd("nmap -sSV -T5 -oA " + nmapOutFilesUrl + " " + targetHost)
+	Println(nmap)
+
+	var niktoOutFile string = path.Join(outputFolder, "nikto.txt")
+	var nikto string = execCmd("nikto -h " + targetHost + " -output " + niktoOutFile)
+	Printf(nikto)
+
+	var gobusterFileUrl string = path.Join(outputFolder, "gobuster.txt")
+	Println(gobusterFileUrl)
+	//
+
+	//	THIS WORKS NORMALLY
+	//execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
+	//	PEEEERFEEECT	@TODO	test with -o
+	execInteractive("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost)
+	execInteractive("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
+
+	//	?Alt?
+	//execCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php -u=" + targetHost + " | tee "+ gobusterFilesUrl)
+	//var sqlmapFileUrl string = path.Join(outputFolder, "sqlmap.txt")
+	//execInteractiveCmd("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all --output-dir=" + outputFolder)
+	//	?tee?
+	//execInteractiveCmd("sqlmap -u " + targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")	// 2>&1 | tee " + sqlmapFileUrl)
+}
+
+func main() {
+	setUpFlags()
+	generateFolder()
+	generateReportFile()
+	test()
 }

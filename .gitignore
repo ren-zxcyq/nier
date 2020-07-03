@@ -1,1 +1,4 @@
 *.txt
+main.go
+notes/*
+handlePdf/createdoc.go
