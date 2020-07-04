@@ -1,7 +1,7 @@
 package handlePdf
 
 /*
- *	Create a docx file using	https://github.com/unidoc/unioffice
+ *	Create a pdf file using gofpdf	-	"github.com/jung-kurt/gofpdf"
  *
  */
 
@@ -19,8 +19,8 @@ type pdfHandler struct {
 
 func newPdfHandler(foldername string) *pdfHandler {
 	var h pdfHandler = pdfHandler{filename: path.Join(foldername, "Nier_Automata_Report.pdf")}
-	//h.age = 42
-	fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
+	//fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
+	//fmt.Println(foldername)
 	return &h
 }
 
@@ -34,6 +34,12 @@ func (h *pdfHandler) exCreate() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func CreatePdf(outputFolderName string) {
+	fmt.Println("outputfoldername is", outputFolderName)
+	pdfHandler := newPdfHandler(outputFolderName)
+	pdfHandler.exCreate()
 }
 
 // ExampleFpdf_HTMLBasicNew demonstrates internal and external links with and without basic
@@ -70,8 +76,3 @@ func (h *pdfHandler) exCreate() {
 // 	// Output:
 // 	// Successfully generated pdf/Fpdf_HTMLBasicNew.pdf
 // }
-
-func CreatePdf(outputFolderName string) {
-	pdfHandler := newPdfHandler(outputFolderName)
-	pdfHandler.exCreate()
-}

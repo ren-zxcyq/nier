@@ -11,9 +11,8 @@ type outputFolderHandler struct {
 
 func newFolderHandler(fName string) *outputFolderHandler {
 	var h outputFolderHandler = outputFolderHandler{folderName: fName}
-	//h.age = 42
 
-	Printf("Address of outputFolderHandler - %p", &h) //	Prints the address of outputFolderHandler
+	//Printf("Address of outputFolderHandler - %p", &h) //	Prints the address of outputFolderHandler
 	return &h
 }
 
@@ -40,7 +39,7 @@ func (h *outputFolderHandler) makeFolder() bool {
 
 func CreateFolder(outputFolder string) {
 	fHandler := newFolderHandler(outputFolder)
-
+	//Println("Creating Folder", outputFolder)
 	var res bool
 	if res = fHandler.makeFolder(); res == false {
 		//	Folder NOT generated. Exit
