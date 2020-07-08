@@ -2,7 +2,9 @@ package utilities
 
 import (
 	"bufio"
+	"encoding/base64"
 	. "fmt"
+	"net/url"
 	"os"
 	"runtime"
 )
@@ -55,4 +57,31 @@ func (h *Utils) PrintFileContents(file string) {
 		i++
 	}
 	Println("-------------")
+}
+
+/*
+ *	encodes t -> base64 & url encoding
+ *	uses:
+ *			net/url
+ *			encoding/base64
+ *	in:
+ *		encodeParams()
+ *		encodeStringBase64()
+ *
+ *	usage:	utilities.EncodingTest()
+ */
+func EncodingTest() {
+	Println("Encoding Test Starting")
+	t := "enc*de Me Plea$e"
+	Println(t)
+	Println(encodeParam(t))
+	Println(encodeStringBase64(t))
+}
+
+func encodeParam(s string) string {
+	return url.QueryEscape(s)
+}
+
+func encodeStringBase64(s string) string {
+	return base64.StdEncoding.EncodeToString([]byte(s))
 }
