@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+
+	"github.com/dchest/uniuri"
 )
 
 type Utils struct{}
@@ -70,18 +72,31 @@ func (h *Utils) PrintFileContents(file string) {
  *
  *	usage:	utilities.EncodingTest()
  */
-func EncodingTest() {
-	Println("Encoding Test Starting")
+func (h *Utils) EncodingTest() {
+	Println("\r\nEncoding Test Starting:\r\n-------------")
 	t := "enc*de Me Plea$e"
 	Println(t)
-	Println(encodeParam(t))
-	Println(encodeStringBase64(t))
+	Println(h.encodeParam(t))
+	Println(h.encodeStringBase64(t))
+	Println(h.UniqueString())
 }
 
-func encodeParam(s string) string {
+func (h *Utils) encodeParam(s string) string {
 	return url.QueryEscape(s)
 }
 
-func encodeStringBase64(s string) string {
+func (h *Utils) encodeStringBase64(s string) string {
 	return base64.StdEncoding.EncodeToString([]byte(s))
 }
+
+/*
+ *	Return a Random String using - github.com/uniuri (cryptographically secure string)
+ */
+func (h *Utils) UniqueString() string {
+	//	Default uniuri.StdChars contains only alphanum
+	uniuri.StdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+=-`~,<.>/?;:'\"")
+	s := uniuri.New() //	default: 16 letters
+	// s := uniuri.NewLen(32)	//	set our own
+	return s
+}
+

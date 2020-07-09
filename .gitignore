@@ -1,3 +1,4 @@
 *.txt
+*.bak
 notes/*
 handle/report/createDoc.go

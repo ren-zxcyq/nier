@@ -17,6 +17,7 @@ type execHandler struct {
 }
 
 type elementsHandler struct {
+	installationDir      string
 	configFilePath       string
 	cOS                  string
 	targetHost           string
@@ -27,10 +28,11 @@ type elementsHandler struct {
 	tools                map[string]string
 }
 
-func NewExecHandler(configPath, os, targetH string, targetP int, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string) *execHandler {
+func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string) *execHandler {
 
 	//	Create an elementsHandler Object to be passed to the exported execHandler
 	var l elementsHandler = elementsHandler{
+		installationDir:      installationDir,
 		configFilePath:       configPath,
 		cOS:                  os,
 		targetHost:           targetH,

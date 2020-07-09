@@ -11,6 +11,7 @@ import (
 )
 
 type cmdlineHandler struct {
+	InstallationDir      string
 	ConfigFilePath       string
 	C_OS                 string
 	TargetHost           string
@@ -80,6 +81,7 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	var u utilities.Utils
 	h.C_OS = u.DetectOS()
 	cwd, _ := os.Getwd()
+	h.InstallationDir = cwd
 	// configFilePath = path.Join(cwd, ".config")
 	h.ConfigFilePath = path.Join(cwd, ".config")
 
@@ -88,6 +90,7 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 
 	//	Show args
 	Println("\r\nSelected:", "\r\n-------------")
+	Println("Installation Dir:", h.InstallationDir)
 	Println("Loading Config:", h.ConfigFilePath)
 	Println("Current OS:", h.C_OS)
 	Println("targethost:", *targetHostPointer)
