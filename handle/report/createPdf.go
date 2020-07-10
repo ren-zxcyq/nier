@@ -139,21 +139,11 @@ func (h *pdfHandler) pdfCreate() error {
 	//	Create a new PDF doc & write title & current date
 	pdf := h.newReport()
 
+	//	Add Target Table
+	pdf = h.targetTable(pdf)
 
-	tableCols := []string{"No", "Tool", "Description"}
-	// var data []
-	tableCont := [][]string {
-		{"1", "ping", "ping -c 1"},
-		{"2", "nmap", "version scan"},
-		{"3", "nikto", "vuln testing"},
-	}
-
-	//	Create Table Header & Fill
-	pdf = h.header(pdf, tableCols)
-	pdf = h.table(pdf, tableCont)
-
-	//	Add Logo
-	pdf = h.image(pdf)
+	//	Add Tools Run Table
+	pdf = h.toolsTable(pdf)
 
 	if pdf.Err() {
 		log.Fatalf("Failed while creating the PDF Report: %s\n", pdf.Error())
@@ -199,7 +189,8 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	pdf.Ln(12)
 
 	pdf.SetFont(fontname, "", 20)
-	pdf.Cell(40,10, time.Now().Format("Mon Sep 9, 2020"))
+	var date string = time.Now().Format("Mon Sep 9, 2020")
+	pdf.Cell(40,10, date)
 	pdf.Ln(12)
 	//	Note on Cell() & Ln()
 	//	
@@ -209,15 +200,52 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	//	Ln() -> moves current position back to the left border & down
 	//			by the provided value
 
+	//	Add Logo
+	pdf = h.image(pdf)
+
+	//@HERE
+	pdf.SetHeaderFunc(func() {
+		//?DONE?@TODO	CHANGE THE IMAGE way to the one used earlier
+		//pdf.Image(imageFile("image/avatar.jpg"), 10, 6, 30, 0, false, "", 0, "")
+		pdf.ImageOptions(
+			"image/avatar.jpg",
+			// 20, 20,
+			// 140, 100,	//
+			10, 6,
+			30, 0,
+			false,
+			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
+			0,
+			"",
+		)
+		pdf.SetY(5)
+		pdf.SetFont("Arial", "B", 15)
+		pdf.Cell(80, 0, "")
+		pdf.CellFormat(45, 10, "Nier - Report", "B", 0, "C", false, 0, "")
+		pdf.Ln(20)
+	})
+	pdf.SetFooterFunc(func() {
+		pdf.SetY(-15)
+		pdf.SetFont("Arial", "I", 8)
+		pdf.CellFormat(0,10, fmt.Sprintf("Page %d/{nb}", pdf.PageNo()), "", 0, "C", false, 0, "")
+	})
+	pdf.AliasNbPages("")	//	Defines an alias for the total number of pages
+	pdf.AddPage()
+	//	HERE Is the Content
+	pdf.SetFont("Times", "", 12)
+	// for j := 1; j <= 40; j++ {
+	// 	pdf.CellFormat(0, 10, fmt.Sprintf("Printing line number %d", j), "", 1, "", false, 0, "")
+	// }
+
 	return pdf
 }
 
 func (h *pdfHandler) header (pdf *gofpdf.Fpdf, hdr []string) *gofpdf.Fpdf {
-	pdf.SetFont(fontname, "B", 16)
+	pdf.SetFont(fontname, "B", 12)
 	pdf.SetFillColor(240, 240, 240)
 	for _, str := range hdr {
 		//	pdf.CellFormat() -> format the new Cell -> +border +background_fill
-		pdf.CellFormat(40, 7, str, "1", 0, "", true, 0, "")
+		pdf.CellFormat(40, 7, str, "1", 0, "LM", true, 0, "")
 	}
 
 	//	Pass	-1 ->	Ln()	i.e. use the height of the last printed Cell as the line height
@@ -228,7 +256,7 @@ func (h *pdfHandler) header (pdf *gofpdf.Fpdf, hdr []string) *gofpdf.Fpdf {
 func (h *pdfHandler) table(pdf *gofpdf.Fpdf, tbl [][]string) *gofpdf.Fpdf {
 	
 	//	Font & Fill Color
-	pdf.SetFont("Times", "", 16)
+	pdf.SetFont("Times", "", 12)
 	pdf.SetFillColor(255,255,255)
 
 	//	Allign columns according to their contents
@@ -266,7 +294,7 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 		"image/avatar.jpg",
 		// 20, 20,
 		// 140, 100,	//
-		25, 70,
+		40, 70,
 		140, 100,
 		false,
 		gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
@@ -283,4 +311,87 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) savePDF(pdf *gofpdf.Fpdf) error {
 	return pdf.OutputFileAndClose(h.filename)
+}
+
+func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40, 10, "Target: Online")
+	pdf.Ln(-1)
+	tableCols := []string{"Port", "Service"}
+	tableCont := [][]string {
+		{"80", "Apache 2.2"},
+		{"110", "Apache 2.2"},
+	}
+	pdf = h.header(pdf, tableCols)
+	pdf = h.table(pdf, tableCont)
+
+	pdf.SetFont(fontname, "B", 12)
+	pdf.SetFillColor(240, 240, 240)
+
+	return pdf
+	// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
+	// pdf.CellFormat(190, 7, "Nier - Report", "0", 0, "CM", false, 0, "")
+}
+
+func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	pdf.AddPage()
+	// pdf.Ln(-1)
+	pdf.Cell(40, 10, "Target: Online")
+	pdf.Ln(-1)
+	tableCols := []string{"Tool", "Description", "Command Opts"}
+	tableCont := [][]string {
+		{"1", "ping", "Initial interaction", "ping -c 1 $TARGET"},
+		{"2", "nmap", "Version scan", "nmap -sSV $TARGET"},
+		{"3", "nikto", "Vuln Testing", "nikto -h $TARGET"},
+		{"4", "gobuster", "Folder Enumeration", "gobuster dir -w -u"},
+	}
+
+	//	Create Table Header & Fill
+	//pdf = h.header(pdf, tableCols)
+	pdf.SetFont(fontname, "B", 12)
+	pdf.SetFillColor(240, 240, 240)
+
+	pdf.CellFormat(8, 7, "No.", "1", 0, "LM", true, 0, "")
+	for i, str := range tableCols {	//		for i, str := range tableCols {
+		////	pdf.CellFormat() -> format the new Cell -> +border +background_fill
+		//pdf.CellFormat(40, 7, str, "1", 0, "LM", true, 0, "")
+		if i == 0 {
+			pdf.CellFormat(25, 7, str, "1", 0, "CM", false, 0, "")
+		} else if i == 1 {
+			//	CellFormat() -> Create a visible border around the cell
+			//	alignStr param is used to align the cell content either Left or Right
+			pdf.CellFormat(50, 7, str, "1", 0, "CM", false, 0, "")			
+		} else if i == 2 {
+			pdf.CellFormat(110, 7, str, "1", 0, "CM", false, 0, "")
+		}
+		//	Consider handling more columns? even thought this is a specific func.
+	}
+
+	//	Pass	-1 ->	Ln()	i.e. use the height of the last printed Cell as the line height
+	pdf.Ln(-1)
+	//pdf = h.table(pdf, tableCont)
+	pdf.SetFont("Times", "", 12)
+	pdf.SetFillColor(255,255,255)
+
+	//	Allign columns according to their contents
+	align := []string{"L", "C", "L", "L", "R", "R"}	//"No.","Tool"
+	for _, line := range tableCont {
+		for i, str := range line {	//	i -> 0, 1,2,3
+			if i == 0 {
+				pdf.CellFormat(8, 7, line[0], "1", 0, "LM", true, 0, "")
+			} else if i == 1 {
+				pdf.CellFormat(25, 7, str, "1", 0, align[i], false, 0, "")
+			} else if i == 2 {
+				//	CellFormat() -> Create a visible border around the cell
+				//	alignStr param is used to align the cell content either Left or Right
+				pdf.CellFormat(50, 7, str, "1", 0, align[i], false, 0, "")			
+			} else if i == 3 {
+				pdf.CellFormat(110, 7, str, "1", 0, align[i], false, 0, "")
+			}
+			//	Consider handling more columns? even thought this is a specific func.
+		}
+		pdf.Ln(-1)
+	}
+
+	return pdf
 }
