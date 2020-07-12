@@ -61,13 +61,13 @@ func main() {
 	hCmd.sessionTokens = cCmd.SessionTokens
 	hCmd.tools = cCmd.Tools
 
-	/*generateFolder()
+	generateFolder()
 	//exec
 	runTools()
-	generateReportFile()*/
+	/*generateReportFile()*/
 
 	//testHttpMethods()
-	testPdf()
+	// testPdf()
 }
 
 /*

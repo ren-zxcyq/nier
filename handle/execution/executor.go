@@ -9,6 +9,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/ren-zxcyq/Nier/nier/handle/tooloutparse"
 )
 
 type execHandler struct {
@@ -122,6 +124,7 @@ func (h *execHandler) execInteractive(cmd string) {
  */
 func (h *execHandler) Exec() {
 
+	toolparser := tooloutparse.NewToolparser()
 	//	Adjust ping flag
 	var pcount string
 	if h.e.cOS == "Windows" {
@@ -134,20 +137,27 @@ func (h *execHandler) Exec() {
 		pcount = "c" //	If none of the 3 use the *nix variation
 	}
 
+	//	Ping
 	var ping string = h.execCmd(h.e.tools["ping"] + " -" + pcount + " 1 " + h.e.targetHost)
-	Printf(ping)
-	var nmapOutFilesUrl string = path.Join(h.e.outputFolder, "nmap_1_sSV")
+	//Printf(ping)
+	toolparser.ParsePing(ping)
 
+	//	Nmap
+	var nmapOutFilesUrl string = path.Join(h.e.outputFolder, "nmap_1_sSV")
 	nmapOutFilesUrl = filepath.ToSlash(nmapOutFilesUrl)
 	//nmapOutFilesUrl = strings.Replace(nmapOutFilesUrl, ":", "", -1)
 
 	var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesUrl + " " + h.e.targetHost)
-	Println(nmap)
+	toolparser.ParseNmapSV(nmap)
+	// Println(nmap)
+	
 
 	var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
 	var nikto string = h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + niktoOutFile)
-	Printf(nikto)
+	// Printf(nikto)
+	toolparser.ParseNikto(nikto)
 
+	/*
 	//	example create file
 	// var gobusterFileUrl string = path.Join(h.e.outputFolder, "gobuster.txt")
 	// Println(gobusterFileUrl)
@@ -156,7 +166,8 @@ func (h *execHandler) Exec() {
 	//	THIS WORKS NORMALLY
 	//execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
 	//	@TODO	test with -o
+	
 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + h.e.targetHost)
 	h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
-
+	*/
 }
