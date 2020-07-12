@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ren-zxcyq/Nier/nier/utilities"
+	"github.com/ren-zxcyq/nier/utilities"
 )
 
 type cmdlineHandler struct {

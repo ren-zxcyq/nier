@@ -5,11 +5,11 @@ import (
 	"strconv"
 
 	//
-	handleCmdLine "github.com/ren-zxcyq/Nier/nier/handle/cmdline"
-	handleExec "github.com/ren-zxcyq/Nier/nier/handle/execution"
-	handleFolder "github.com/ren-zxcyq/Nier/nier/handle/folder"
-	handlePdf "github.com/ren-zxcyq/Nier/nier/handle/report"
-	"github.com/ren-zxcyq/Nier/nier/utilities"
+	handleCmdLine "github.com/ren-zxcyq/nier/handle/cmdline"
+	handleExec "github.com/ren-zxcyq/nier/handle/execution"
+	handleFolder "github.com/ren-zxcyq/nier/handle/folder"
+	handlePdf "github.com/ren-zxcyq/nier/handle/report"
+	"github.com/ren-zxcyq/nier/utilities"
 )
 
 type elementsHandler struct {
