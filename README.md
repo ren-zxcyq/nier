@@ -8,7 +8,8 @@ go get github.com/ren-zxcyq/nier
 sudo -E ~/go/src/github.com/ren-zxcyq/nier/main.go -host [TARGET]
 
 
-## Usage:
+## Usage
+```
 ~/go/src/github.com/ren-zxcyq/nier$ ~/go/bin/nier -h
 
         ⣤⡄⠀⠀⣤⢠⢠⠀⠀⠀⠀⣤⠄⠀⢤⡀⠀⠀⠀⢀⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⢀⢀⣤⠀⠀⠀⠀⣒⣒
@@ -27,3 +28,4 @@ Usage of ~/go/bin/nier:
   -s    Enable Subdomain Enumeration
   -sess string
         Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2
+```

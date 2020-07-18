@@ -150,7 +150,6 @@ func (h *execHandler) Exec() {
 	var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesUrl + " " + h.e.targetHost)
 	toolparser.ParseNmapSV(nmap)
 	// Println(nmap)
-	Println("NMAP")
 
 	/*
 		var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
@@ -158,17 +157,16 @@ func (h *execHandler) Exec() {
 		// Printf(nikto)
 		toolparser.ParseNikto(nikto)
 
+		// example create file
+		var gobusterFileUrl string = path.Join(h.e.outputFolder, "gobuster.txt")
+		Println(gobusterFileUrl)
 
-			//	example create file
-			// var gobusterFileUrl string = path.Join(h.e.outputFolder, "gobuster.txt")
-			// Println(gobusterFileUrl)
-			//
 
-			//	THIS WORKS NORMALLY
-			//execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
-			//	@TODO	test with -o
+		// THIS WORKS NORMALLY
+		execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
+		// @TODO	test with -o
 
-			h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + h.e.targetHost)
-			h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
+		h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + h.e.targetHost)
+		h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
 	*/
 }
