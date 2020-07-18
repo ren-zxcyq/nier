@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	. "fmt"
+	"go/build"
 	"net/url"
 	"os"
 	"runtime"
@@ -27,6 +28,21 @@ func (h *Utils) DetectOS() string {
 	}
 }
 
+func (h *Utils) GetGOPATH() string {
+	gopath := os.Getenv("GOPATH")
+	if gopath == "" {
+		gopath = build.Default.GOPATH
+	}
+	// fmt.Println(gopath)
+	return gopath
+}
+
+func (h *Utils) GetGOROOT() string {
+	//fmt.Println(build.Default.GOROOT)
+	// fmt.Println(runtime.GOROOT())
+	return runtime.GOROOT()
+}
+
 //	Return list by reading absPath file line-by-line
 func (h *Utils) ReturnLinesFromFile(absPath string) []string {
 	tfile, err := os.Open(absPath)
@@ -47,10 +63,10 @@ func (h *Utils) ReturnLinesFromFile(absPath string) []string {
 
 func (h *Utils) PrintFileContents(file string) {
 
-	Println("\r\nLoading Config:", file)
+	// Println("\r\nLoading Config:", file)
 
 	//	File exists
-	Println("\r\nLoading Utilities From:\r\n-------------")
+	Println("\r\nLoading Utilities From\t-\t", file, "\r\n-------------")
 	var utils []string = h.ReturnLinesFromFile(file)
 
 	var i int = 0
@@ -99,4 +115,3 @@ func (h *Utils) UniqueString() string {
 	// s := uniuri.NewLen(32)	//	set our own
 	return s
 }
-

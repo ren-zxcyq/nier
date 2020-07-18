@@ -27,15 +27,14 @@ type elementsHandler struct {
 var hCmd elementsHandler
 
 func generateReportFile() {
-	Println("\r\nInitiating Document Creation Process\r\n-------------")
+	Println("\r\nInitiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
 	//handlePdf.CreateDoc(outputFolder)
 	handlePdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder)
 	Println("-------------")
 }
 
 func generateFolder() {
-	Println("\r\nInitiating Folder Creation Process\r\n-------------")
-	Println(hCmd.outputFolder)
+	Println("\r\nInitiating Folder Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
 	handleFolder.CreateFolder(hCmd.outputFolder)
 	Println("-------------")
 }
@@ -100,4 +99,3 @@ func testPdf() {
 	generateFolder()
 	generateReportFile()
 }
-

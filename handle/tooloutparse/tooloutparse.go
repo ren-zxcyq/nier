@@ -10,14 +10,15 @@ import (
 	"strings"
 )
 
-type toolparser struct {}
+type toolparser struct{}
+
 func NewToolparser() *toolparser {
 	var h toolparser = toolparser{}
 	return &h
 }
 
 func (h *toolparser) ParsePing(cmdout string) {
-	
+
 	if strings.Contains(cmdout, "1 packets transmitted, 1 received, 0% packet loss") {
 		Println("Ping - OK")
 		//	Did receive Reply
@@ -26,7 +27,7 @@ func (h *toolparser) ParsePing(cmdout string) {
 		//	Did not receive Reply Host is unreachable
 		//	@TODO	-	?Fail Gracefully?
 	}
-	// Println(cmdout)
+	Println(cmdout)
 }
 
 func (h *toolparser) ParseNmapSV(cmdout string) {
@@ -45,7 +46,7 @@ func (h *toolparser) ParseNmapSV(cmdout string) {
 		Println("NmapSV - FAIL")
 		//	@TODO	-	?Fail Gracefully?
 	}
-	// Println(cmdout)
+	Println(cmdout)
 }
 
 func (h *toolparser) ParseNikto(cmdout string) {

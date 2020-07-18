@@ -21,7 +21,6 @@ func newFolderHandler(fName string) *outputFolderHandler {
  *	p passed in here is actually the merged cwd & user supplied [-o] param.
  */
 func (h *outputFolderHandler) makeFolder() bool {
-	Println("\nIn create")
 	var p string = h.folderName
 	if wh, err := os.Stat(p); os.IsNotExist(err) {
 

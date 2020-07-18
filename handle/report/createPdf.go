@@ -8,23 +8,24 @@ package handlePdf
 import (
 	"fmt"
 	"log"
-	"time"
 	"path"
 	"path/filepath"
+	"time"
+
 	"github.com/jung-kurt/gofpdf"
 	//"github.com/jung-kurt/gofpdf/internal/example"
 )
 
-const fontname = "Courier"	//"Times", "Arial", "Helvetica"
+const fontname = "Courier" //"Times", "Arial", "Helvetica"
 
 type pdfHandler struct {
 	installationDir string
-	filename string
-	foldername string
+	filename        string
+	foldername      string
 }
 
 func newPdfHandler(installDir, foldername string) *pdfHandler {
-	var h pdfHandler = pdfHandler{installationDir: installDir, foldername: foldername, filename: path.Join(foldername, "Nier_Automata_Report.pdf")}
+	var h pdfHandler = pdfHandler{installationDir: installDir, foldername: foldername, filename: path.Join(foldername, "Nier_Automaton_Report.pdf")}
 	//fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
 	//fmt.Println(foldername)
 	return &h
@@ -125,7 +126,7 @@ func (h *pdfHandler) pdfCreate() error {
 	)
 
 	pdf.CellFormat(190, 7, "- by zxcyq", "0", 0, "CM", false, 0, "")
-	
+
 	return pdf.OutputFileAndClose(h.filename)
 }
 */
@@ -177,7 +178,6 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	//		int -> size
 	pdf.SetFont(fontname, "B", 28)
 
-
 	//	Write a text cell of length 40 & height 10.
 	//		-	no starting coords
 	//			Cell() moves the current pos to the end of the cell
@@ -190,10 +190,10 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 
 	pdf.SetFont(fontname, "", 20)
 	var date string = time.Now().Format("Mon Sep 9, 2020")
-	pdf.Cell(40,10, date)
+	pdf.Cell(40, 10, date)
 	pdf.Ln(12)
 	//	Note on Cell() & Ln()
-	//	
+	//
 	//	Cell() -> No Coordinates
 	//		document keeps them internally
 	//		advances to the right by the length of the cell being written
@@ -227,9 +227,9 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	pdf.SetFooterFunc(func() {
 		pdf.SetY(-15)
 		pdf.SetFont("Arial", "I", 8)
-		pdf.CellFormat(0,10, fmt.Sprintf("Page %d/{nb}", pdf.PageNo()), "", 0, "C", false, 0, "")
+		pdf.CellFormat(0, 10, fmt.Sprintf("Page %d/{nb}", pdf.PageNo()), "", 0, "C", false, 0, "")
 	})
-	pdf.AliasNbPages("")	//	Defines an alias for the total number of pages
+	pdf.AliasNbPages("") //	Defines an alias for the total number of pages
 	pdf.AddPage()
 	//	HERE Is the Content
 	pdf.SetFont("Times", "", 12)
@@ -240,7 +240,7 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	return pdf
 }
 
-func (h *pdfHandler) header (pdf *gofpdf.Fpdf, hdr []string) *gofpdf.Fpdf {
+func (h *pdfHandler) header(pdf *gofpdf.Fpdf, hdr []string) *gofpdf.Fpdf {
 	pdf.SetFont(fontname, "B", 12)
 	pdf.SetFillColor(240, 240, 240)
 	for _, str := range hdr {
@@ -254,13 +254,13 @@ func (h *pdfHandler) header (pdf *gofpdf.Fpdf, hdr []string) *gofpdf.Fpdf {
 }
 
 func (h *pdfHandler) table(pdf *gofpdf.Fpdf, tbl [][]string) *gofpdf.Fpdf {
-	
+
 	//	Font & Fill Color
 	pdf.SetFont("Times", "", 12)
-	pdf.SetFillColor(255,255,255)
+	pdf.SetFillColor(255, 255, 255)
 
 	//	Allign columns according to their contents
-	align := []string{"L", "C", "L", "R", "R", "R"}	//"No.","Tool"
+	align := []string{"L", "C", "L", "R", "R", "R"} //"No.","Tool"
 	for _, line := range tbl {
 		for i, str := range line {
 			//	CellFormat() -> Create a visible border around the cell
@@ -303,7 +303,7 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	)
 	if pdf.Err() {
 		fmt.Printf("Failed while adding image to the PDF Report: %s\n", pdf.Error())
-		
+
 	}
 
 	return pdf
@@ -318,7 +318,7 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.Cell(40, 10, "Target: Online")
 	pdf.Ln(-1)
 	tableCols := []string{"Port", "Service"}
-	tableCont := [][]string {
+	tableCont := [][]string{
 		{"80", "Apache 2.2"},
 		{"110", "Apache 2.2"},
 	}
@@ -339,7 +339,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.Cell(40, 10, "Target: Online")
 	pdf.Ln(-1)
 	tableCols := []string{"Tool", "Description", "Command Opts"}
-	tableCont := [][]string {
+	tableCont := [][]string{
 		{"1", "ping", "Initial interaction", "ping -c 1 $TARGET"},
 		{"2", "nmap", "Version scan", "nmap -sSV $TARGET"},
 		{"3", "nikto", "Vuln Testing", "nikto -h $TARGET"},
@@ -352,7 +352,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.SetFillColor(240, 240, 240)
 
 	pdf.CellFormat(8, 7, "No.", "1", 0, "LM", true, 0, "")
-	for i, str := range tableCols {	//		for i, str := range tableCols {
+	for i, str := range tableCols { //		for i, str := range tableCols {
 		////	pdf.CellFormat() -> format the new Cell -> +border +background_fill
 		//pdf.CellFormat(40, 7, str, "1", 0, "LM", true, 0, "")
 		if i == 0 {
@@ -360,7 +360,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 		} else if i == 1 {
 			//	CellFormat() -> Create a visible border around the cell
 			//	alignStr param is used to align the cell content either Left or Right
-			pdf.CellFormat(50, 7, str, "1", 0, "CM", false, 0, "")			
+			pdf.CellFormat(50, 7, str, "1", 0, "CM", false, 0, "")
 		} else if i == 2 {
 			pdf.CellFormat(110, 7, str, "1", 0, "CM", false, 0, "")
 		}
@@ -371,12 +371,12 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.Ln(-1)
 	//pdf = h.table(pdf, tableCont)
 	pdf.SetFont("Times", "", 12)
-	pdf.SetFillColor(255,255,255)
+	pdf.SetFillColor(255, 255, 255)
 
 	//	Allign columns according to their contents
-	align := []string{"L", "C", "L", "L", "R", "R"}	//"No.","Tool"
+	align := []string{"L", "C", "L", "L", "R", "R"} //"No.","Tool"
 	for _, line := range tableCont {
-		for i, str := range line {	//	i -> 0, 1,2,3
+		for i, str := range line { //	i -> 0, 1,2,3
 			if i == 0 {
 				pdf.CellFormat(8, 7, line[0], "1", 0, "LM", true, 0, "")
 			} else if i == 1 {
@@ -384,7 +384,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 			} else if i == 2 {
 				//	CellFormat() -> Create a visible border around the cell
 				//	alignStr param is used to align the cell content either Left or Right
-				pdf.CellFormat(50, 7, str, "1", 0, align[i], false, 0, "")			
+				pdf.CellFormat(50, 7, str, "1", 0, align[i], false, 0, "")
 			} else if i == 3 {
 				pdf.CellFormat(110, 7, str, "1", 0, align[i], false, 0, "")
 			}
