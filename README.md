@@ -1,11 +1,14 @@
 # nier
 
 ## Installation
+```
 go get github.com/ren-zxcyq/nier
-
+```
 
 ## Run
+```
 sudo -E ~/go/src/github.com/ren-zxcyq/nier/main.go -host [TARGET]
+```
 
 
 ## Usage
