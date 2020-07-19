@@ -14,8 +14,7 @@ If run as user other than root:
 ```
                                     (In debian -E specifies using the same ENV structure)
                                     (depending on whether u built the binary or not)
-```
-```
+
 sudo -E ~/go/bin/nier -host [TARGET]
 sudo -E ~/go/src/github.com/ren-zxcyq/nier/main.go -host [TARGET]
 ```
