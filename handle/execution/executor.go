@@ -1,16 +1,20 @@
-package handleExec
+// Package handleexec is responsible for connecting and running tools needed and
+// interface their execution with parsing.
+package handleexec
 
 import (
-	. "fmt"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/ren-zxcyq/nier/handle/tooloutparse"
+	"github.com/ren-zxcyq/nier/utilities"
 )
 
 type execHandler struct {
@@ -30,6 +34,11 @@ type elementsHandler struct {
 	tools                map[string]string
 }
 
+//
+// NewExecHandler defines a new execHandler struct.
+// execHandler.Exec() runs all the tools.
+// execHandler is attached with all the internal unexported functions.
+//
 func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string) *execHandler {
 
 	//	Create an elementsHandler Object to be passed to the exported execHandler
@@ -48,7 +57,7 @@ func NewExecHandler(installationDir, configPath, os, targetH string, targetP int
 	//	Create execHandler
 	var h execHandler = execHandler{state: false, e: l}
 
-	//Printf("Address of execHandler - %p", &h) //	Prints the address of outputFolderHandler
+	//fmt.Printf("Address of execHandler - %p", &h) //	Prints the address of outputFolderHandler
 	return &h
 }
 
@@ -62,11 +71,11 @@ func (h *execHandler) execCmd(cmd string) string {
 
 	out, err := exec.Command(s[0], s[1:]...).Output()
 	if err != nil {
-		//Printf("Err in ex", err.Error())
-		log.Fatal(err.Error())
+		//fmt.Printf("Err in ex", err.Error())
+		log.Println(err.Error())
 	}
 
-	var res string = Sprintf("\r\n%s output is: \r\n-------------\r\n%s\r\n%s\n\n", cmd, out, err) //Sprintf() questionable
+	var res string = fmt.Sprintf("\r\n%s output is: \r\n-------------\r\n%s\r\n%s\n\n", cmd, out, err) //fmt.Sprintf() questionable
 
 	h.state = false
 	return res
@@ -81,18 +90,18 @@ func (h *execHandler) execInteractive(cmd string) {
 	h.state = true
 	var s []string = strings.Split(cmd, " ")
 
-	var res string = Sprintf("\n%s output is: \n-------------\n", s[0]) //Sprintf() questionable
-	Print(res)
+	var res string = fmt.Sprintf("\n%s output is: \n-------------\n", s[0]) //fmt.Sprintf() questionable
+	fmt.Print(res)
 
 	//!was NOT commented OUT
 	//f, err := os.OpenFile(outputFolder + "/" + s[0] + ".out", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	//Println("Creating FILE")
+	//fmt.Println("Creating FILE")
 	var e []string = strings.Split(s[0], "/")
 	var toolname string = e[len(e)-1]
 	of, err := os.Create(h.e.outputFolder + "/" + toolname + "_out")
 	ef, err := os.Create(h.e.outputFolder + "/" + toolname + "_err")
 	if err != nil {
-		Printf("error opening file: %v", err)
+		fmt.Printf("error opening file: %v", err)
 	}
 	defer ef.Close()
 	defer of.Close()
@@ -120,6 +129,32 @@ func (h *execHandler) execInteractive(cmd string) {
 }
 
 /*
+ *	Need to make sure that -host contains http://
+ */
+ func (h *execHandler) checkHTTPMethods() {
+	//	NEEDS hCmd Assignments to happen before running.
+	// host := "http://192.168.1.20"
+	// port := 80
+	// // var tar string = host + ":" + string(port)
+	// var tar string = host + ":" + strconv.Itoa(port)
+	// var u utilities.Utils
+	// u.EncodingTest()
+	// fmt.Println("-------------")
+	// var a utilities.Agent
+	// //a.Robots("http://www.google.com")
+	// //a.Head("http://192.168.1.20")
+	// //a.OptionsRequest("http://192.168.1.20")
+	// //a.OptionsVerify("http://192.168.1.20")
+	// a.OptionsVerify(tar)
+	// fmt.Println("-------------")
+	fmt.Println("\r\nInitiating HTTP Methods Checking\r\n-------------")
+	var a utilities.Agent
+	a.OptionsRequest(h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort))
+	a.OptionsVerify(h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort))
+	fmt.Println("-------------")
+}
+
+/*
  *	Uses methods:	execCmd & execInteractive	essentially main execution happens here
  */
 func (h *execHandler) Exec() {
@@ -139,27 +174,29 @@ func (h *execHandler) Exec() {
 
 	//	Ping
 	var ping string = h.execCmd(h.e.tools["ping"] + " -" + pcount + " 1 " + h.e.targetHost)
-	//Printf(ping)
+	//fmt.Printf(ping)
 	toolparser.ParsePing(ping)
 
 	//	Nmap
-	var nmapOutFilesUrl string = path.Join(h.e.outputFolder, "nmap_1_sSV")
-	nmapOutFilesUrl = filepath.ToSlash(nmapOutFilesUrl)
-	//nmapOutFilesUrl = strings.Replace(nmapOutFilesUrl, ":", "", -1)
+	var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
+	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
+	//nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
 
-	var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesUrl + " " + h.e.targetHost)
+	var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
 	toolparser.ParseNmapSV(nmap)
-	// Println(nmap)
+	// fmt.Println(nmap)
 
+	//	HTTP Methods
+	h.checkHTTPMethods()
 	/*
 		var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
 		var nikto string = h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + niktoOutFile)
-		// Printf(nikto)
+		// fmt.Printf(nikto)
 		toolparser.ParseNikto(nikto)
 
 		// example create file
 		var gobusterFileUrl string = path.Join(h.e.outputFolder, "gobuster.txt")
-		Println(gobusterFileUrl)
+		fmt.Println(gobusterFileUrl)
 
 
 		// THIS WORKS NORMALLY

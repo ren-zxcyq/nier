@@ -1,7 +1,9 @@
-package handleFolder
+// Package handlefolder checks if the requested output folder exists and creates it if not.
+// If the folder exists, the package terminates execution.
+package handlefolder
 
 import (
-	. "fmt"
+	"fmt"
 	"os"
 )
 
@@ -12,7 +14,7 @@ type outputFolderHandler struct {
 func newFolderHandler(fName string) *outputFolderHandler {
 	var h outputFolderHandler = outputFolderHandler{folderName: fName}
 
-	//Printf("Address of outputFolderHandler - %p", &h) //	Prints the address of outputFolderHandler
+	//fmt.Printf("Address of outputFolderHandler - %p", &h) //	Prints the address of outputFolderHandler
 	return &h
 }
 
@@ -22,10 +24,10 @@ func newFolderHandler(fName string) *outputFolderHandler {
  */
 func (h *outputFolderHandler) makeFolder() bool {
 	var p string = h.folderName
-	if wh, err := os.Stat(p); os.IsNotExist(err) {
+	if _, err := os.Stat(p); os.IsNotExist(err) {
 
-		Printf("\nCreating: %s\n", p)
-		Printf("\n%s\n", wh)
+		// fmt.Printf("\nCreating: %s\n", p)
+		// fmt.Printf("\n%s\n", _)
 
 		//os.Mkdir(p, 0777)	//	Create a single folder
 		os.MkdirAll(p, 0777) //	Create Folder & any parents
@@ -38,11 +40,11 @@ func (h *outputFolderHandler) makeFolder() bool {
 
 func CreateFolder(outputFolder string) {
 	fHandler := newFolderHandler(outputFolder)
-	//Println("Creating Folder", outputFolder)
+	//fmt.Println("Creating Folder", outputFolder)
 	var res bool
 	if res = fHandler.makeFolder(); res == false {
 		//	Folder NOT generated. Exit
-		Println("\n-------------\nFolder already exists. Exiting.")
+		fmt.Println("\n-------------\nFolder already exists. Exiting.")
 		os.Exit(1)
 	}
 }

@@ -1,4 +1,4 @@
-package handlePdf
+package handlepdf
 
 /*
  *	Create a pdf file using gofpdf	-	"github.com/jung-kurt/gofpdf"
@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"log"
 	"path"
-	"path/filepath"
+	// "path/filepath"
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
@@ -39,7 +39,7 @@ func (h *pdfHandler) exCreate() {
 	err := pdf.OutputFileAndClose(h.filename)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 	}
 }
 
@@ -147,14 +147,14 @@ func (h *pdfHandler) pdfCreate() error {
 	pdf = h.toolsTable(pdf)
 
 	if pdf.Err() {
-		log.Fatalf("Failed while creating the PDF Report: %s\n", pdf.Error())
+		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
 		return pdf.Error()
 	}
 
 	//	Save
 	err := h.savePDF(pdf)
 	if err != nil {
-		log.Fatalf("Cannot save PDF: %s\n", err)
+		log.Printf("Cannot save PDF: %s\n", err)
 		return err
 	}
 	return nil
@@ -272,11 +272,11 @@ func (h *pdfHandler) table(pdf *gofpdf.Fpdf, tbl [][]string) *gofpdf.Fpdf {
 	return pdf
 }
 
-// ImageFile returns a qualified filename in which the path to the image
-// directory is prepended to the specified filename.
-func (h *pdfHandler) imageFile(fileStr string) string {
-	return filepath.Join(h.installationDir, "image", fileStr)
-}
+// // ImageFile returns a qualified filename in which the path to the image
+// // directory is prepended to the specified filename.
+// func (h *pdfHandler) imageFile(fileStr string) string {
+// 	return filepath.Join(h.installationDir, "image", fileStr)
+// }
 
 func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	//	ImageOptions() takes a file path, x,y,width & height params
@@ -291,7 +291,7 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	// 	"",
 	// )
 	pdf.ImageOptions(
-		"image/avatar.jpg",
+		h.installationDir+"/image/avatar.jpg",
 		// 20, 20,
 		// 140, 100,	//
 		40, 70,

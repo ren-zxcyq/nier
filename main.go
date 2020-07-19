@@ -1,15 +1,15 @@
 package main
 
 import (
-	. "fmt"
-	"strconv"
+	"fmt"
+	// "strconv"
 
 	//
-	handleCmdLine "github.com/ren-zxcyq/nier/handle/cmdline"
-	handleExec "github.com/ren-zxcyq/nier/handle/execution"
-	handleFolder "github.com/ren-zxcyq/nier/handle/folder"
-	handlePdf "github.com/ren-zxcyq/nier/handle/report"
-	"github.com/ren-zxcyq/nier/utilities"
+	handlecmdline "github.com/ren-zxcyq/nier/handle/cmdline"
+	handleexec "github.com/ren-zxcyq/nier/handle/execution"
+	handlefolder "github.com/ren-zxcyq/nier/handle/folder"
+	handlepdf "github.com/ren-zxcyq/nier/handle/report"
+	// "github.com/ren-zxcyq/nier/utilities"
 )
 
 type elementsHandler struct {
@@ -27,28 +27,28 @@ type elementsHandler struct {
 var hCmd elementsHandler
 
 func generateReportFile() {
-	Println("\r\nInitiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
-	//handlePdf.CreateDoc(outputFolder)
-	handlePdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder)
-	Println("-------------")
+	fmt.Println("\r\nInitiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
+	//handlepdf.CreateDoc(outputFolder)
+	handlepdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder)
+	fmt.Println("-------------")
 }
 
 func generateFolder() {
-	Println("\r\nInitiating Folder Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
-	handleFolder.CreateFolder(hCmd.outputFolder)
-	Println("-------------")
+	fmt.Println("\r\nInitiating Folder Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
+	handlefolder.CreateFolder(hCmd.outputFolder)
+	// fmt.Println("-------------")
 }
 
 func runTools() {
-	Println("\r\nInitiating Exec\r\n-------------")
-	ex := handleExec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools)
+	fmt.Println("\r\nInitiating Exec\r\n-------------")
+	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools)
 	ex.Exec()
-	Println("-------------")
+	fmt.Println("-------------")
 }
 
 func main() {
 	//	@Main
-	cCmd := handleCmdLine.NewCmdlineHandler()
+	cCmd := handlecmdline.NewCmdlineHandler()
 
 	hCmd.installationDir = cCmd.InstallationDir
 	hCmd.configFilePath = cCmd.ConfigFilePath
@@ -63,37 +63,37 @@ func main() {
 	generateFolder()
 	//exec
 	runTools()
-	/*generateReportFile()*/
+	generateReportFile()
 
 	//testHttpMethods()
 	// testPdf()
 }
 
-/*
- *	Need to make sure that -host contains http://
- */
-func testHttpMethods() {
-	//	NEEDS hCmd Assignments to happen before running.
-	// host := "http://192.168.1.20"
-	// port := 80
-	// // var tar string = host + ":" + string(port)
-	// var tar string = host + ":" + strconv.Itoa(port)
-	// var u utilities.Utils
-	// u.EncodingTest()
-	// Println("-------------")
-	// var a utilities.Agent
-	// //a.Robots("http://www.google.com")
-	// //a.Head("http://192.168.1.20")
-	// //a.OptionsRequest("http://192.168.1.20")
-	// //a.OptionsVerify("http://192.168.1.20")
-	// a.OptionsVerify(tar)
-	// Println("-------------")
-	Println("\r\nInitiating HTTP Methods Checking\r\n-------------")
-	var a utilities.Agent
-	a.OptionsRequest(hCmd.targetHost + ":" + strconv.Itoa(hCmd.targetPort))
-	a.OptionsVerify(hCmd.targetHost + ":" + strconv.Itoa(hCmd.targetPort))
-	Println("-------------")
-}
+// /*
+//  *	Need to make sure that -host contains http://
+//  */
+// func testHttpMethods() {
+// 	//	NEEDS hCmd Assignments to happen before running.
+// 	// host := "http://192.168.1.20"
+// 	// port := 80
+// 	// // var tar string = host + ":" + string(port)
+// 	// var tar string = host + ":" + strconv.Itoa(port)
+// 	// var u utilities.Utils
+// 	// u.EncodingTest()
+// 	// fmt.Println("-------------")
+// 	// var a utilities.Agent
+// 	// //a.Robots("http://www.google.com")
+// 	// //a.Head("http://192.168.1.20")
+// 	// //a.OptionsRequest("http://192.168.1.20")
+// 	// //a.OptionsVerify("http://192.168.1.20")
+// 	// a.OptionsVerify(tar)
+// 	// fmt.Println("-------------")
+// 	fmt.Println("\r\nInitiating HTTP Methods Checking\r\n-------------")
+// 	var a utilities.Agent
+// 	a.OptionsRequest(hCmd.targetHost + ":" + strconv.Itoa(hCmd.targetPort))
+// 	a.OptionsVerify(hCmd.targetHost + ":" + strconv.Itoa(hCmd.targetPort))
+// 	fmt.Println("-------------")
+// }
 
 func testPdf() {
 	generateFolder()

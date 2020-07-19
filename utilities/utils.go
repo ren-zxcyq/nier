@@ -3,7 +3,7 @@ package utilities
 import (
 	"bufio"
 	"encoding/base64"
-	. "fmt"
+	"fmt"
 	"go/build"
 	"net/url"
 	"os"
@@ -18,13 +18,13 @@ func (h *Utils) DetectOS() string {
 	os := runtime.GOOS
 	switch os {
 	case "windows":
-		return Sprintf("Windows")
+		return fmt.Sprintf("Windows")
 	case "darwin":
-		return Sprintf("Mac OS")
+		return fmt.Sprintf("Mac OS")
 	case "linux":
-		return Sprintf("Linux")
+		return fmt.Sprintf("Linux")
 	default:
-		return Sprintf("%s", os)
+		return fmt.Sprintf("%s", os)
 	}
 }
 
@@ -47,7 +47,7 @@ func (h *Utils) GetGOROOT() string {
 func (h *Utils) ReturnLinesFromFile(absPath string) []string {
 	tfile, err := os.Open(absPath)
 	if err != nil {
-		Println(err)
+		fmt.Println(err)
 	}
 	defer tfile.Close()
 
@@ -63,18 +63,18 @@ func (h *Utils) ReturnLinesFromFile(absPath string) []string {
 
 func (h *Utils) PrintFileContents(file string) {
 
-	// Println("\r\nLoading Config:", file)
+	// fmt.Println("\r\nLoading Config:", file)
 
 	//	File exists
-	Println("\r\nLoading Utilities From\t-\t", file, "\r\n-------------")
+	fmt.Println("\r\nLoading Utilities From\t-\t", file, "\r\n-------------")
 	var utils []string = h.ReturnLinesFromFile(file)
 
 	var i int = 0
 	for i < len(utils) {
-		Println(utils[i])
+		fmt.Println(utils[i])
 		i++
 	}
-	Println("-------------")
+	fmt.Println("-------------")
 }
 
 /*
@@ -89,12 +89,12 @@ func (h *Utils) PrintFileContents(file string) {
  *	usage:	utilities.EncodingTest()
  */
 func (h *Utils) EncodingTest() {
-	Println("\r\nEncoding Test Starting:\r\n-------------")
+	fmt.Println("\r\nEncoding Test Starting:\r\n-------------")
 	t := "enc*de Me Plea$e"
-	Println(t)
-	Println(h.encodeParam(t))
-	Println(h.encodeStringBase64(t))
-	Println(h.UniqueString())
+	fmt.Println(t)
+	fmt.Println(h.encodeParam(t))
+	fmt.Println(h.encodeStringBase64(t))
+	fmt.Println(h.UniqueString())
 }
 
 func (h *Utils) encodeParam(s string) string {
