@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
-	"path/filepath"
+	// "path"
+	// "path/filepath"
 	"strconv"
 	"strings"
 
@@ -178,16 +178,19 @@ func (h *execHandler) Exec() {
 	toolparser.ParsePing(ping)
 
 	//	Nmap
-	var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
-	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
-	//nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
+	// var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
+	// nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
+	// //nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
 
-	var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
-	toolparser.ParseNmapSV(nmap)
-	// fmt.Println(nmap)
+	// var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
+	// toolparser.ParseNmapSV(nmap)
+	// // fmt.Println(nmap)
 
 	//	HTTP Methods
 	h.checkHTTPMethods()
+	//tester := utilities.NewHTTPShandler()
+	//tester.TestHTTPS(h.e.targetHost)
+
 	/*
 		var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
 		var nikto string = h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + niktoOutFile)
