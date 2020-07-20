@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"time"
+	"strings"
 
 	"github.com/jung-kurt/gofpdf"
 	//"github.com/jung-kurt/gofpdf/internal/example"
@@ -29,12 +30,12 @@ type pdfHandler struct {
 }
 
 func newPdfHandler(installDir, foldername string) *pdfHandler {
-	fmt.Println("newPDFHANDLER", foldername)
+	// fmt.Println("newPDFHANDLER", foldername)
 	var h pdfHandler = pdfHandler{installationDir: installDir, foldername: foldername, filename: path.Join(foldername, "Nier_Automaton_Report.pdf")}
 	//fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
 	//fmt.Println(foldername)
 	toolparser = tooloutparse.NewToolparser()
-	fmt.Println("asdfasdfasdf", h.filename)
+	// fmt.Println("asdfasdfasdf", h.filename)
 	return &h
 }
 
@@ -51,7 +52,7 @@ func (h *pdfHandler) exCreate() {
 }
 
 func CreatePdf(installDir, outputFolderName string) {
-	fmt.Println("outputfoldername is", outputFolderName)
+	// fmt.Println("outputfoldername is", outputFolderName)
 	pdfHandler := newPdfHandler(installDir, outputFolderName)
 	// pdfHandler.exCreate()
 	err := pdfHandler.pdfCreate()
@@ -349,7 +350,7 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	res := toolparser.ParseNmapSV(nmap)
 
-	fmt.Println("@@@@@@@")
+	// fmt.Println("@@@@@@@")
 	fmt.Println(res)
 	////////////////////////////////////////////////////////////////////////////////////////
 
@@ -375,8 +376,9 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	tableCont := [][]string{
 		{"1", "ping", "Initial interaction", "ping -c 1 $TARGET"},
 		{"2", "nmap", "Version scan", "nmap -sSV $TARGET"},
-		{"3", "nikto", "Vuln Testing", "nikto -h $TARGET"},
-		{"4", "gobuster", "Folder Enumeration", "gobuster dir -w -u"},
+		{"3", "nmap", "Vulnerability scan", "nmap --script=vuln $TARGET"},
+		{"4", "nikto", "Vuln Testing", "nikto -h $TARGET"},
+		{"5", "gobuster", "Folder Enumeration", "gobuster dir -w -u"},
 	}
 
 	//	Create Table Header & Fill
@@ -389,13 +391,13 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 		////	pdf.CellFormat() -> format the new Cell -> +border +background_fill
 		//pdf.CellFormat(40, 7, str, "1", 0, "LM", true, 0, "")
 		if i == 0 {
-			pdf.CellFormat(25, 7, str, "1", 0, "CM", false, 0, "")
+			pdf.CellFormat(25, 7, str, "1", 0, "CM", true, 0, "")
 		} else if i == 1 {
 			//	CellFormat() -> Create a visible border around the cell
 			//	alignStr param is used to align the cell content either Left or Right
-			pdf.CellFormat(50, 7, str, "1", 0, "CM", false, 0, "")
+			pdf.CellFormat(50, 7, str, "1", 0, "CM", true, 0, "")
 		} else if i == 2 {
-			pdf.CellFormat(110, 7, str, "1", 0, "CM", false, 0, "")
+			pdf.CellFormat(110, 7, str, "1", 0, "CM", true, 0, "")
 		}
 		//	Consider handling more columns? even thought this is a specific func.
 	}
@@ -413,13 +415,13 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 			if i == 0 {
 				pdf.CellFormat(8, 7, line[0], "1", 0, "LM", true, 0, "")
 			} else if i == 1 {
-				pdf.CellFormat(25, 7, str, "1", 0, align[i], false, 0, "")
+				pdf.CellFormat(25, 7, str, "1", 0, align[i], true, 0, "")
 			} else if i == 2 {
 				//	CellFormat() -> Create a visible border around the cell
 				//	alignStr param is used to align the cell content either Left or Right
-				pdf.CellFormat(50, 7, str, "1", 0, align[i], false, 0, "")
+				pdf.CellFormat(50, 7, str, "1", 0, align[i], true, 0, "")
 			} else if i == 3 {
-				pdf.CellFormat(110, 7, str, "1", 0, align[i], false, 0, "")
+				pdf.CellFormat(110, 7, str, "1", 0, align[i], true, 0, "")
 			}
 			//	Consider handling more columns? even thought this is a specific func.
 		}
@@ -429,7 +431,8 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return pdf
 }
 
-func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) {	//*gofpdf.Fpdf
+func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.Fpdf
+
 	//return pdf
 	var nmapOutFilesURL string = path.Join(h.foldername, "nmap-vuln.nmap")
 	// fmt.Println("HHHHHHHHHHHHHHHHHHHHHHH", nmapOutFilesURL)
@@ -441,8 +444,71 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) {	//*gofpdf.Fpdf
 
 	res := toolparser.ParseNmapVuln(nmap)
 
-	fmt.Println("@@@@@@@")
+	// fmt.Println("@@@@@@@")
 	fmt.Println(res)
+	//	res contains filtered tool output
+	
+	tableCont, err := u.StringToLines(res)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	
+
+	pdf.AddPage()
+	// pdf.Ln(-1)
+
+	//	Create Table Header & Fill
+	//pdf = h.header(pdf, tableCols)
+	pdf.SetFont(fontname, "B", 12)
+	pdf.SetFillColor(240, 240, 240)
+
+	pdf.Cell(40, 10, "Nmap: Vulnerability Scan Results")
+	pdf.Ln(-1)
+	// tableCols := []string{"Tool", "Description", "Command Opts"}
+	// tableCont := [][]string{
+	// 	{"1", "ping", "Initial interaction", "ping -c 1 $TARGET"},
+	// }
+
+	pdf.SetFont("Times", "", 12)
+	pdf.SetFillColor(255, 255, 255)
+
+
+	
+	for _, line := range tableCont {
+		r := strings.TrimSpace(line)
+		l := len(r)
+		if (l == 0) || (l == 1) || (r == "|") {
+			// // fmt.Println(`AAAAAAAAAAAAAAAAAAAAAAA`)
+			// // pdf.CellFormat(195, 7, "MARKED", "1", 0, "LM", false, 0, "")
+			// // pdf.Ln(-1)
+			// continue
+			// // // for i, str := range line {
+			// // pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
+			// // pdf.Ln(-1)
+			// // // fmt.Println("hELLOS", line)
+			// // // }
+			continue
+						
+		} else {
+			// for i, str := range line {
+			pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
+			pdf.Ln(-1)
+			// fmt.Println("hELLOS", line)
+			// }
+			//continue			
+		}
+	}
+
+
+
+
+
+
+	return pdf
 }
 //	/root/Desktop/report/nmap-vuln.nmap
 //	nmap-vuln.nmap
+
+func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.Fpdf
+	return nil
+}

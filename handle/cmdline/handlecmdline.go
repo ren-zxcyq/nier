@@ -37,7 +37,7 @@ func NewCmdlineHandler() *cmdlineHandler {
 var targetHostPointer = flag.String("host", "127.0.0.1", "Identifies target host - i.e. 127.0.0.1 or www.myshop.com or http://myshop.com")
 var targetPortPointer = flag.Int("p", 80, "Target Port")
 var subdomainEnumerationPointer = flag.Bool("s", false, "Enable Subdomain Enumeration") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
-var outputFolderPointer = flag.String("o", "~/Desktop/Nier_Automaton_Report", "Output Folder PATH - in format: -o \"~/Desktop/report\"")
+var outputFolderPointer = flag.String("o", os.Getenv("HOME") + "/Desktop/Nier_Automaton_Report", "Output Folder PATH - in format: -o \"~/Desktop/report\"")
 var sessionTokensPointer = flag.String("sess", "", "Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2")
 
 func (h *cmdlineHandler) PrintBanner() {
@@ -116,12 +116,12 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 
 	//	Determine report file path
 	// tmpstr := *outputFolderPointer
-	fmt.Println("AAAAAA:", *outputFolderPointer)
+	// fmt.Println("AAAAAA:", *outputFolderPointer)
 	//tmpPath, _ := filepath.Abs(tmpstr)	//*outputFolderPointer)
 	h.OutputFolder = *outputFolderPointer	//tmpPath
 	// fmt.Println("AAAAAA:", tmpPath)
-	fmt.Println("AAAAAA:", h.OutputFolder)
-	fmt.Println("AAAAAA:", *outputFolderPointer)
+	// fmt.Println("AAAAAA:", h.OutputFolder)
+	// fmt.Println("AAAAAA:", *outputFolderPointer)
 	
 
 	h.SessionTokens = *sessionTokensPointer

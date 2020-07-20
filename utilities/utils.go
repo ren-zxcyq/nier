@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
+	"strings"
 	"io/ioutil"
 	"github.com/dchest/uniuri"
 )
@@ -41,6 +42,15 @@ func (h *Utils) GetGOROOT() string {
 	//fmt.Println(build.Default.GOROOT)
 	// fmt.Println(runtime.GOROOT())
 	return runtime.GOROOT()
+}
+
+func (h *Utils) StringToLines(s string) (lines []string, err error) {
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+	}
+	err = scanner.Err()
+	return
 }
 
 //	Return File contents as a variable
