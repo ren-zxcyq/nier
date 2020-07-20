@@ -10,14 +10,14 @@ import (
 	"strings"
 )
 
-type toolparser struct{}
+type Toolparser struct{}
 
-func NewToolparser() *toolparser {
-	var h toolparser = toolparser{}
+func NewToolparser() *Toolparser {
+	var h Toolparser = Toolparser{}
 	return &h
 }
 
-func (h *toolparser) ParsePing(cmdout string) {
+func (h *Toolparser) ParsePing(cmdout string) {
 
 	if strings.Contains(cmdout, "1 packets transmitted, 1 received, 0% packet loss") {
 		fmt.Println("Ping - OK")
@@ -30,7 +30,7 @@ func (h *toolparser) ParsePing(cmdout string) {
 	fmt.Println(cmdout)
 }
 
-func (h *toolparser) ParseNmapSV(cmdout string) {
+func (h *Toolparser) ParseNmapSV(cmdout string) string {
 	var extract []string
 	if strings.Contains(cmdout, "Host is up") {
 		//	Nmap was successful.	-	Extract Features
@@ -38,18 +38,40 @@ func (h *toolparser) ParseNmapSV(cmdout string) {
 		extract = strings.Split(cmdout, "ports")
 		// fmt.Println(extract[1])
 		extract = strings.Split(extract[1], "Service detection performed.")
-		fmt.Println(extract[0])
+		// fmt.Println(extract[0])
 		//	@TODO	-	Connect with Reporting
-
+		return extract[0]
 	} else {
 		//	Nmap did not run smoothly. "Host is up" was not part of Stdout
-		fmt.Println("NmapSV - FAIL")
+		// fmt.Println("NmapSV - FAIL")
 		//	@TODO	-	?Fail Gracefully?
+		return fmt.Sprintln("NmapSV - FAIL")
 	}
-	fmt.Println(cmdout)
+	// fmt.Println(cmdout)
 }
 
-func (h *toolparser) ParseNikto(cmdout string) {
+func (h *Toolparser) ParseNmapVuln(cmdout string) string {
+	var extract []string
+	if strings.Contains(cmdout, "Host is up") {
+		//	Nmap was successful.	-	Extract Features
+		fmt.Println("NmapVuln - OK")
+		extract = strings.Split(cmdout, "ports")
+		// // fmt.Println(extract[1])
+		// extract = strings.Split(extract[1], "Service detection performed.")
+		// // fmt.Println(extract[0])
+		// //	@TODO	-	Connect with Reporting
+		return extract[1]
+	} else {
+		//	Nmap did not run smoothly. "Host is up" was not part of Stdout
+		// fmt.Println("NmapSV - FAIL")
+		//	@TODO	-	?Fail Gracefully?
+		return fmt.Sprintln("NmapVuln - FAIL")
+	}
+	// fmt.Println(cmdout)
+}
+
+
+func (h *Toolparser) ParseNikto(cmdout string) {
 	if strings.Contains(cmdout, "No web server found on") && strings.Contains(cmdout, "0 host(s) tested") {
 		fmt.Println("Nikto - OK")
 	} else {

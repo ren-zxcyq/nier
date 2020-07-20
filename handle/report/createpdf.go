@@ -9,14 +9,18 @@ import (
 	"fmt"
 	"log"
 	"path"
-	// "path/filepath"
+	"path/filepath"
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
 	//"github.com/jung-kurt/gofpdf/internal/example"
+	"github.com/ren-zxcyq/nier/utilities"
+	tooloutparse "github.com/ren-zxcyq/nier/handle/tooloutparse"
 )
 
 const fontname = "Courier" //"Times", "Arial", "Helvetica"
+var u utilities.Utils
+var toolparser *tooloutparse.Toolparser
 
 type pdfHandler struct {
 	installationDir string
@@ -29,6 +33,7 @@ func newPdfHandler(installDir, foldername string) *pdfHandler {
 	var h pdfHandler = pdfHandler{installationDir: installDir, foldername: foldername, filename: path.Join(foldername, "Nier_Automaton_Report.pdf")}
 	//fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
 	//fmt.Println(foldername)
+	toolparser = tooloutparse.NewToolparser()
 	fmt.Println("asdfasdfasdf", h.filename)
 	return &h
 }
@@ -142,11 +147,19 @@ func (h *pdfHandler) pdfCreate() error {
 	//	Create a new PDF doc & write title & current date
 	pdf := h.newReport()
 
+	//	Filter Tool Output
+
+
+
 	//	Add Target Table
 	pdf = h.targetTable(pdf)
 
 	//	Add Tools Run Table
 	pdf = h.toolsTable(pdf)
+
+
+	h.nmapVulnsTable(pdf)
+
 
 	if pdf.Err() {
 		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
@@ -312,7 +325,7 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 }
 
 func (h *pdfHandler) savePDF(pdf *gofpdf.Fpdf) error {
-	fmt.Println("BBBBBBBBBBBBBBB", h.filename)
+	// fmt.Println("BBBBBBBBBBBBBBB", h.filename)
 	return pdf.OutputFileAndClose(h.filename)				//	HERE
 }
 
@@ -320,11 +333,28 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40, 10, "Target: Online")
 	pdf.Ln(-1)
+
 	tableCols := []string{"Port", "Service"}
 	tableCont := [][]string{
 		{"80", "Apache 2.2"},
 		{"110", "Apache 2.2"},
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	//	Filter NMAP output
+	var nmapOutFilesURL string = path.Join(h.foldername, "nmap_1_sSV.nmap")
+	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
+	//nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
+	var nmap string = u.ReturnFileContentsStr(nmapOutFilesURL)
+
+	res := toolparser.ParseNmapSV(nmap)
+
+	fmt.Println("@@@@@@@")
+	fmt.Println(res)
+	////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 	pdf = h.header(pdf, tableCols)
 	pdf = h.table(pdf, tableCont)
 
@@ -399,6 +429,20 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return pdf
 }
 
-// func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) {	//*gofpdf.Fpdf
+	//return pdf
+	var nmapOutFilesURL string = path.Join(h.foldername, "nmap-vuln.nmap")
+	// fmt.Println("HHHHHHHHHHHHHHHHHHHHHHH", nmapOutFilesURL)
+	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
+	// fmt.Println("HHHHHHHHHHHHHHHHHHHHHHH", nmapOutFilesURL)
 
-// }
+	//nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
+	var nmap string = u.ReturnFileContentsStr(nmapOutFilesURL)
+
+	res := toolparser.ParseNmapVuln(nmap)
+
+	fmt.Println("@@@@@@@")
+	fmt.Println(res)
+}
+//	/root/Desktop/report/nmap-vuln.nmap
+//	nmap-vuln.nmap

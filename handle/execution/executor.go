@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	// "path"
-	// "path/filepath"
+	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -178,13 +178,21 @@ func (h *execHandler) Exec() {
 	toolparser.ParsePing(ping)
 
 	//	Nmap
-	// var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
-	// nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
-	// //nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
+	var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
+	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
+	//nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
 
 	// var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
+	h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
 	// toolparser.ParseNmapSV(nmap)
 	// // fmt.Println(nmap)
+
+	// nmapOutFilesURL string = path.Join(h.e.outputFolder, "/nmap-vuln.nmap")
+	// nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
+	// var nmapvuln string = h.execCmd(h.e.tools["nmap"] + " --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
+	h.execCmd(h.e.tools["nmap"] + " --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
+	//fmt.Println("NNNNNNNNNNNNNN",nmapvuln)
+
 
 	//	HTTP Methods
 	h.checkHTTPMethods()

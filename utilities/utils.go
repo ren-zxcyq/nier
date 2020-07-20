@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"os"
 	"runtime"
-
+	"io/ioutil"
 	"github.com/dchest/uniuri"
 )
 
@@ -41,6 +41,20 @@ func (h *Utils) GetGOROOT() string {
 	//fmt.Println(build.Default.GOROOT)
 	// fmt.Println(runtime.GOROOT())
 	return runtime.GOROOT()
+}
+
+//	Return File contents as a variable
+func (h *Utils) ReturnFileContentsStr(absPath string) string {
+	b, err := ioutil.ReadFile(absPath) // just pass the file name
+    if err != nil {
+        fmt.Print("READSTR",err)
+    }
+
+    //fmt.Println(b) // print the content as 'bytes'
+    str := string(b) // convert content to a 'string'
+	// fmt.Println(str) // print the content as a 'string'
+	
+	return fmt.Sprintln(str)
 }
 
 //	Return list by reading absPath file line-by-line
