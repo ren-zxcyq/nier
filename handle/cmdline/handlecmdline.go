@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
+	// "path/filepath"
 	"strings"
 
 	"github.com/ren-zxcyq/nier/utilities"
@@ -112,12 +112,17 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	h.TargetPort = *targetPortPointer
 	h.SubdomainEnumeration = *subdomainEnumerationPointer
 	//h.OutputFolder = *outputFolderPointer
-	//h.OutputFolder = path.Join(cwd, h.OutputFolder)
+	// h.OutputFolder = path.Join(cwd, h.OutputFolder)
 
 	//	Determine report file path
-	//tmpstr := *outputFolderPointer
-	tmpPath, _ := filepath.Abs(*outputFolderPointer)
-	h.OutputFolder = tmpPath
+	// tmpstr := *outputFolderPointer
+	fmt.Println("AAAAAA:", *outputFolderPointer)
+	//tmpPath, _ := filepath.Abs(tmpstr)	//*outputFolderPointer)
+	h.OutputFolder = *outputFolderPointer	//tmpPath
+	// fmt.Println("AAAAAA:", tmpPath)
+	fmt.Println("AAAAAA:", h.OutputFolder)
+	fmt.Println("AAAAAA:", *outputFolderPointer)
+	
 
 	h.SessionTokens = *sessionTokensPointer
 	fmt.Println("-------------")

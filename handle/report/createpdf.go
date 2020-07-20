@@ -25,9 +25,11 @@ type pdfHandler struct {
 }
 
 func newPdfHandler(installDir, foldername string) *pdfHandler {
+	fmt.Println("newPDFHANDLER", foldername)
 	var h pdfHandler = pdfHandler{installationDir: installDir, foldername: foldername, filename: path.Join(foldername, "Nier_Automaton_Report.pdf")}
 	//fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
 	//fmt.Println(foldername)
+	fmt.Println("asdfasdfasdf", h.filename)
 	return &h
 }
 
@@ -208,7 +210,7 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 		//?DONE?@TODO	CHANGE THE IMAGE way to the one used earlier
 		//pdf.Image(imageFile("image/avatar.jpg"), 10, 6, 30, 0, false, "", 0, "")
 		pdf.ImageOptions(
-			"image/avatar.jpg",
+			h.installationDir+"/image/avatar.jpg",
 			// 20, 20,
 			// 140, 100,	//
 			10, 6,
@@ -310,7 +312,8 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 }
 
 func (h *pdfHandler) savePDF(pdf *gofpdf.Fpdf) error {
-	return pdf.OutputFileAndClose(h.filename)
+	fmt.Println("BBBBBBBBBBBBBBB", h.filename)
+	return pdf.OutputFileAndClose(h.filename)				//	HERE
 }
 
 func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
@@ -395,3 +398,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	return pdf
 }
+
+// func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+
+// }
