@@ -29,9 +29,9 @@ var hCmd elementsHandler
 func generateReportFile() {
 	fmt.Println("\r\nInitiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
 	//handlepdf.CreateDoc(outputFolder)
-	fmt.Println(hCmd.installationDir, hCmd.outputFolder)
+	// fmt.Println(hCmd.installationDir, hCmd.outputFolder)
 	handlepdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder)
-	fmt.Println("-------------")
+	// fmt.Println("-------------")
 }
 
 func generateFolder() {

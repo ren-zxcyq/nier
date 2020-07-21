@@ -24,10 +24,10 @@ func newFolderHandler(fName string) *outputFolderHandler {
  */
 func (h *outputFolderHandler) makeFolder() bool {
 	var p string = h.folderName
-	if n, err := os.Stat(fmt.Sprintf(p)); os.IsNotExist(err) {
+	if _, err := os.Stat(fmt.Sprintf(p)); os.IsNotExist(err) {	//n
 
-		fmt.Printf("\nCreating: %s\n", p)
-		fmt.Printf("\n%s\n", n)
+		// fmt.Printf("\nCreating: %s\n", p)
+		// fmt.Printf("\n%s\n", n)
 
 		//os.Mkdir(p, 0777)	//	Create a single folder
 		os.MkdirAll(p, 0777) //	Create Folder & any parents

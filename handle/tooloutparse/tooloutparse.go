@@ -8,7 +8,11 @@ package tooloutparse
 import (
 	"fmt"
 	"strings"
+	"github.com/ren-zxcyq/nier/utilities"
+	"log"
 )
+
+var u utilities.Utils
 
 type Toolparser struct{}
 
@@ -33,13 +37,13 @@ func (h *Toolparser) ParsePing(cmdout string) {
 func (h *Toolparser) ParseNmapSV(cmdout string) string {
 	var extract []string
 	if strings.Contains(cmdout, "Host is up") {
-		//	Nmap was successful.	-	Extract Features
-		fmt.Println("NmapSV - OK")
+		// //	Nmap was successful.	-	Extract Features
+		// fmt.Println("NmapSV - OK")
 		extract = strings.Split(cmdout, "ports")
-		// fmt.Println(extract[1])
+		// // fmt.Println(extract[1])
 		extract = strings.Split(extract[1], "Service detection performed.")
-		// fmt.Println(extract[0])
-		//	@TODO	-	Connect with Reporting
+		// // fmt.Println(extract[0])
+		// //	@TODO	-	Connect with Reporting
 		return extract[0]
 	} else {
 		//	Nmap did not run smoothly. "Host is up" was not part of Stdout
@@ -54,7 +58,7 @@ func (h *Toolparser) ParseNmapVuln(cmdout string) string {
 	var extract []string
 	if strings.Contains(cmdout, "Host is up") {
 		//	Nmap was successful.	-	Extract Features
-		fmt.Println("NmapVuln - OK")
+		// fmt.Println("NmapVuln - OK")
 		extract = strings.Split(cmdout, "ports")
 		// // fmt.Println(extract[1])
 		// extract = strings.Split(extract[1], "Service detection performed.")
@@ -78,4 +82,26 @@ func (h *Toolparser) ParseNikto(cmdout string) {
 		fmt.Println("Nikto - FAIL")
 	}
 	fmt.Println(cmdout)
+}
+
+//	ParseGobuster Filters out results that are of (Status: 403)
+//	Returns an array of lines.
+func (h *Toolparser) ParseGobuster(cmdout string) []string {
+	
+	var extract []string
+	// extract = u.StringToLines(cmdout)
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	for _,v := range strCont {	//	k
+		// fmt.Println(k,"-",v)
+		if strings.Contains(v,"Status: 403") {
+			continue
+		} else {
+			// extract += string(v)
+			extract = append(extract,string(v))
+		}
+	}
+	return extract
 }

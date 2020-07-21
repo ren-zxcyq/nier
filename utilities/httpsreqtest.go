@@ -87,7 +87,7 @@ func (a *HTTPShandler) HTTPSRequestMethodStatus(method, url string) string {
 
 func (a *HTTPShandler) HTTPSOptionsRequest(url string) string {
 	// url = a.checkURL(url)
-	fmt.Println(url)
+	// fmt.Println(url)
 	fmt.Println("\r\nHTTP OPTIONS Request - Retrieve Supported HTTP Methods\r\n-------------\r\nResponse Status:")
 	var r string
 	r = a.RequestMethod("OPTIONS", url)

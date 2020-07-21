@@ -151,7 +151,7 @@ func (h *execHandler) execInteractive(cmd string) {
 	var a utilities.Agent
 	a.OptionsRequest(h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort))
 	a.OptionsVerify(h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort))
-	fmt.Println("-------------")
+	// fmt.Println("-------------")
 }
 
 /*
@@ -187,6 +187,7 @@ func (h *execHandler) Exec() {
 	// toolparser.ParseNmapSV(nmap)
 	// // fmt.Println(nmap)
 
+	// fmt.Println("Initiating nmap --script=vuln scanning.","-------------")
 	// nmapOutFilesURL string = path.Join(h.e.outputFolder, "/nmap-vuln.nmap")
 	// nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
 	// var nmapvuln string = h.execCmd(h.e.tools["nmap"] + " --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
@@ -199,20 +200,23 @@ func (h *execHandler) Exec() {
 	//tester := utilities.NewHTTPShandler()
 	//tester.TestHTTPS(h.e.targetHost)
 
+	// example create file
+	// var gobusterFileUrl string = path.Join(h.e.outputFolder, "gobuster.txt")
+	// fmt.Println(gobusterFileUrl)
+
+	/*
+	// THIS WORKS NORMALLY
+	execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
+	// @TODO	test with -o
+	*/
+	// h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + h.e.targetHost)
+	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
+	//	-s, --statuscodes string            Positive status codes (will be overwritten with statuscodesblacklist if set) (default "200,204,301,302,307,401,403")
 	/*
 		var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
 		var nikto string = h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + niktoOutFile)
 		// fmt.Printf(nikto)
 		toolparser.ParseNikto(nikto)
-
-		// example create file
-		var gobusterFileUrl string = path.Join(h.e.outputFolder, "gobuster.txt")
-		fmt.Println(gobusterFileUrl)
-
-
-		// THIS WORKS NORMALLY
-		execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
-		// @TODO	test with -o
 
 		h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + h.e.targetHost)
 		h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")

@@ -161,6 +161,8 @@ func (h *pdfHandler) pdfCreate() error {
 
 	h.nmapVulnsTable(pdf)
 
+	h.gobusterDirTable(pdf)
+
 
 	if pdf.Err() {
 		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
@@ -279,9 +281,41 @@ func (h *pdfHandler) table(pdf *gofpdf.Fpdf, tbl [][]string) *gofpdf.Fpdf {
 	align := []string{"L", "C", "L", "R", "R", "R"} //"No.","Tool"
 	for _, line := range tbl {
 		for i, str := range line {
-			//	CellFormat() -> Create a visible border around the cell
-			//	alignStr param is used to align the cell content either Left or Right
+			// //	CellFormat() -> Create a visible border around the cell
+			// //	alignStr param is used to align the cell content either Left or Right
+			// fmt.Println(i,"-hie-",str)
 			pdf.CellFormat(40, 7, str, "1", 0, align[i], false, 0, "")
+		}
+		pdf.Ln(-1)
+	}
+	return pdf
+}
+
+func (h *pdfHandler) singlelinetable(pdf *gofpdf.Fpdf, tbl []string) *gofpdf.Fpdf {
+
+	//	Font & Fill Color
+	// pdf.SetFont("Times", "", 12)
+	pdf.SetFont(fontname, "", 10)	//	fontname, "B", 12
+	pdf.SetFillColor(240, 240, 240)
+
+	//	Allign columns according to their contents
+	// align := []string{"L", "C", "L", "R", "R", "R"} //"No.","Tool"
+	for _, line := range tbl {
+		
+		r := strings.TrimSpace(line)
+		l := len(r)
+		if (l == 0) || (l == 1) {
+			// fmt.Println("CONT'D")
+			continue
+		} else {
+			// // for i, str := range line {
+			// // // 	//	CellFormat() -> Create a visible border around the cell
+			// // // 	//	alignStr param is used to align the cell content either Left or Right
+			// // 	fmt.Println(i,"-hie-",str)
+			// // 	pdf.CellFormat(40, 7, string(str), "1", 0, align[i], false, 0, "")
+			// fmt.Println(string(line))
+			pdf.CellFormat(195, 7, string(line), "1", 0, "LM", true, 0, "")
+			// }
 		}
 		pdf.Ln(-1)
 	}
@@ -335,11 +369,11 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.Cell(40, 10, "Target: Online")
 	pdf.Ln(-1)
 
-	tableCols := []string{"Port", "Service"}
-	tableCont := [][]string{
-		{"80", "Apache 2.2"},
-		{"110", "Apache 2.2"},
-	}
+	// tableCols := []string{"Port", "Service"}
+	// tableCont := [][]string{
+	// 	{"80", "Apache 2.2"},
+	// 	{"110", "Apache 2.2"},
+	// }
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	//	Filter NMAP output
@@ -351,17 +385,72 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	res := toolparser.ParseNmapSV(nmap)
 
 	// fmt.Println("@@@@@@@")
-	fmt.Println(res)
+	// fmt.Println(res)
 	////////////////////////////////////////////////////////////////////////////////////////
+	strCont, err := u.StringToLines(res)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	//fmt.Println(strCont)
+	/*
+	var x []string
+	for _,v := range strCont {
+		// // fmt.Println(k,"-",v)
+		// x = strings.Fields(v)
+		x = strings.SplitAfterN(v, "\t", 4) 
+		//fmt.Println(x)
+		for u,uu := range x {
+			fmt.Println(u,"-",uu)
+		}
+	}
+	*/
+
+	/*	@UNCOMMENT
+	tableCols := tableCont[0]
+	tableCont = tableCont[1:]
+	*/
 
 
 
+
+	pdf = h.singlelinetable(pdf, strCont)
+
+
+
+
+	/*
+	for _, line := range tableCont {
+		r := strings.TrimSpace(line)
+		l := len(r)
+		if (l == 0) || (l == 1) || (r == "|") {
+			// // fmt.Println(`AAAAAAAAAAAAAAAAAAAAAAA`)
+			// // pdf.CellFormat(195, 7, "MARKED", "1", 0, "LM", false, 0, "")
+			// // pdf.Ln(-1)
+			// continue
+			// // // for i, str := range line {
+			// // pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
+			// // pdf.Ln(-1)
+			// // // fmt.Println("hELLOS", line)
+			// // // }
+			continue
+						
+		} else {
+			// for i, str := range line {
+			pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
+			pdf.Ln(-1)
+			// fmt.Println("hELLOS", line)
+			// }
+			//continue			
+		}
+	}
+	*/
+	/*	@UNCOMMENT
 	pdf = h.header(pdf, tableCols)
 	pdf = h.table(pdf, tableCont)
 
 	pdf.SetFont(fontname, "B", 12)
 	pdf.SetFillColor(240, 240, 240)
-
+	*/
 	return pdf
 	// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
 	// pdf.CellFormat(190, 7, "Nier - Report", "0", 0, "CM", false, 0, "")
@@ -370,7 +459,7 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
 	// pdf.Ln(-1)
-	pdf.Cell(40, 10, "Target: Online")
+	pdf.Cell(40, 12, "Target: Online")
 	pdf.Ln(-1)
 	tableCols := []string{"Tool", "Description", "Command Opts"}
 	tableCont := [][]string{
@@ -445,8 +534,7 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.F
 	res := toolparser.ParseNmapVuln(nmap)
 
 	// fmt.Println("@@@@@@@")
-	fmt.Println(res)
-	//	res contains filtered tool output
+	// fmt.Println(res)							//	res contains filtered tool output
 	
 	tableCont, err := u.StringToLines(res)
 	if err != nil {
@@ -510,5 +598,31 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.F
 //	nmap-vuln.nmap
 
 func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.Fpdf
-	return nil
+	pdf.AddPage()
+
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40, 10, "Gobuster Output")
+	pdf.Ln(-1)
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	//	Filter Gobuster output
+	var gobusterOutURL string = path.Join(h.foldername, "gobuster-URLs")
+	//gobusterOutURL = filepath.ToSlash(gobusterOutURL)
+	//gobusterOutURL = strings.Replace(gobusterOutURL, ":", "", -1)
+	// fmt.Println("||||||||||\r\n",gobusterOutURL)
+	var gobuster string = u.ReturnFileContentsStr(gobusterOutURL)
+	// res := gobuster	//toolparser.ParseNmapSV(gobuster)
+	res := toolparser.ParseGobuster(gobuster)
+	// fmt.Println("******\r\n",gobuster)
+	// fmt.Println("******\r\n",res)
+
+	////////////////////////////////////////////////////////////////////////////////////////
+	// fmt.Println("res = ", res)
+	// strCont, err := u.StringToLines(res)
+	// if err != nil {
+	// 	log.Println("Failed while separating lines in formatted tool output")
+	// }
+	// pdf = h.singlelinetable(pdf, strCont)
+	pdf = h.singlelinetable(pdf, res)
+	return pdf
 }
