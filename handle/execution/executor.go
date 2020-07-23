@@ -177,13 +177,18 @@ func (h *execHandler) Exec() {
 	//fmt.Printf(ping)
 	toolparser.ParsePing(ping)
 
+	
+	//	Web Server Fingerprinting
+
 	//	Nmap
 	var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
 	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
 	//nmapOutFilesURL = strings.Replace(nmapOutFilesURL, ":", "", -1)
 
 	// var nmap string = h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
-	h.execCmd(h.e.tools["nmap"] + " -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
+	h.execCmd(h.e.tools["nmap"] + " -Pn -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
+	/*	@PRV
+	//	
 	// toolparser.ParseNmapSV(nmap)
 	// // fmt.Println(nmap)
 
@@ -191,28 +196,35 @@ func (h *execHandler) Exec() {
 	// nmapOutFilesURL string = path.Join(h.e.outputFolder, "/nmap-vuln.nmap")
 	// nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
 	// var nmapvuln string = h.execCmd(h.e.tools["nmap"] + " --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
-	h.execCmd(h.e.tools["nmap"] + " --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
-	//fmt.Println("NNNNNNNNNNNNNN",nmapvuln)
-
+	*/
+	//	nmap -p- -Pn -vv -sTV -T5 --script=banner -oA /root/Desktkop/nmap-banner- 192.168.1.20
+	h.execCmd(h.e.tools["nmap"] + " -Pn -p- -vv -sTV -T5 --script=banner -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-banners")) + " " + h.e.targetHost)
+	h.execCmd(h.e.tools["httprint"] + " -P0 -s /usr/share/httprint/signatures.txt -ox " + filepath.ToSlash(path.Join(h.e.outputFolder, "/httprint-srv-version")) + " -h " + h.e.targetHost)
+	h.execCmd(h.e.tools["nmap"] + " -Pn --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
+	h.execCmd(h.e.tools["nmap"] + " -Pn -p" + strconv.Itoa(h.e.targetPort) + " --script=http-comments-displayer -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-comments")) + " " + h.e.targetHost)
 
 	//	HTTP Methods
 	h.checkHTTPMethods()
+	/*
 	//tester := utilities.NewHTTPShandler()
 	//tester.TestHTTPS(h.e.targetHost)
+	*/
+	//var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
+	h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + filepath.ToSlash(path.Join(h.e.outputFolder, "nikto.txt")))
 
-	// example create file
-	// var gobusterFileUrl string = path.Join(h.e.outputFolder, "gobuster.txt")
-	// fmt.Println(gobusterFileUrl)
 
-	/*
+	/*	@RMV_COMMENT
 	// THIS WORKS NORMALLY
 	execInteractiveCmd("/root/go/bin/gobuster dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + targetHost + " -o " + gobusterFilesUrl)
 	// @TODO	test with -o
 	*/
+	/*	@RMV_COMMENT
 	// h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + h.e.targetHost)
-	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
+	*/
+	//	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
+	
 	//	-s, --statuscodes string            Positive status codes (will be overwritten with statuscodesblacklist if set) (default "200,204,301,302,307,401,403")
-	/*
+	/*	@RMV_COMMENT
 		var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
 		var nikto string = h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + niktoOutFile)
 		// fmt.Printf(nikto)
