@@ -102,6 +102,40 @@ func (h *Utils) PrintFileContents(file string) {
 	fmt.Println("-------------")
 }
 
+func (h *Utils) SaveStringToFile(fileurl, newcontents string) {
+	//	Open file
+	f, err := os.Create(fileurl)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+
+	//	Write
+	n,err := f.WriteString(newcontents)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	//	Report
+	fmt.Printf("Wrote %d bytes\r\n", n)
+
+	f.Sync()	//	Flush
+}
+
+
+// Get URL, check for http:// or https:// prefix
+// remove if present.
+func (h *Utils) Trimurlsuffixhttp(url string) string {
+	if strings.Contains(url, "http://") {
+		url = strings.TrimPrefix(url, "http://")
+	} else if strings.Contains(url, "https://") {
+		url = strings.TrimPrefix(url, "https://")
+	} else if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
+		//return the url as is
+	}
+	return url
+}
+
 /*
  *	encodes t -> base64 & url encoding
  *	uses:

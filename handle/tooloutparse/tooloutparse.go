@@ -268,3 +268,50 @@ func (h *Toolparser) ParseHTTPrint(cmdout string) []string {
 
 	return extract
 }
+
+func (h *Toolparser) ParseHTTPMethods(cmdout string) []string {
+	var extract []string
+	var cmdoutlist []string
+
+
+
+	cmdoutlist = strings.SplitN(cmdout, "Method - Status\r\n-------------", 2)
+	// fmt.Println("AAAAAAAA", cmdoutlist[0]),
+	if strings.Contains(cmdoutlist[0], "HTTPS") {
+		extract = append(extract, "HTTPS")
+	} else {
+		extract = append(extract, "HTTP")
+	}
+
+	strCont, err := u.StringToLines(cmdoutlist[1])
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	// fmt.Println(len(strCont))
+	// strCont = strings.Split(strCont, "<match")
+	extract = append(extract, "---")
+
+	for _,val := range strCont {
+		// fmt.Println(k,"\t-\t",val)
+		if strings.Contains(val, "-") {
+			extract = append(extract, val)
+		}
+	}
+
+	return extract
+}
+
+func (h *Toolparser) ParseRobots(cmdout string) []string {
+	var extract []string
+
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+
+	for _,val := range strCont {
+		extract = append(extract, val)
+	}
+	
+	return extract
+}

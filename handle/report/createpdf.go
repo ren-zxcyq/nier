@@ -158,10 +158,15 @@ func (h *pdfHandler) pdfCreate() error {
 
 	pdf = h.httprinttable(pdf)
 
+	pdf = h.httpmethodstable(pdf)
+
+	pdf = h.robotstxttable(pdf)
+
+
 	//	Add Tools Run Table
 	pdf = h.toolsTable(pdf)
 	pdf = h.nmapVulnsTable(pdf)
-	//h.gobusterDirTable(pdf)
+	pdf = h.gobusterDirTable(pdf)
 	pdf = h.nmapComments_MAYBE_table(pdf)
 
 	pdf = h.niktotable(pdf)
@@ -859,6 +864,43 @@ func (h *pdfHandler) niktotable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	res := toolparser.ParseNikto(niktoout)
 
 	pdf = h.singlelinetable(pdf, res)
+
+	return pdf
+}
+
+func (h *pdfHandler) httpmethodstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	
+	pdf.AddPage()
+
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40,10, "HTTP: Method - Status")
+											//	@TODO	Add	-	Check: httptesting.txt")
+	pdf.Ln(-1)
+
+
+	var httptestingOutURL string = path.Join(h.foldername, "httptesting.txt")
+	var httptestingout string = u.ReturnFileContentsStr(httptestingOutURL)
+	res := toolparser.ParseHTTPMethods(httptestingout)
+
+	pdf = h.singlelinetable(pdf, res)
+
+	return pdf
+}
+
+func (h *pdfHandler) robotstxttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	pdf.AddPage()
+
+	pdf.SetFont(fontname, "B", 14)
+	pdf.Cell(40,10, "HTTP: Method - Status")
+											//	@TODO	Add	-	Check: httptesting.txt")
+	pdf.Ln(-1)
+
+	var robotstxtOutURL string = path.Join(h.foldername, "/getrobots.txt")
+	var robotstxtout string = u.ReturnFileContentsStr(robotstxtOutURL)
+	res := toolparser.ParseRobots(robotstxtout)
+
+	pdf = h.singlelinetable(pdf, res)
+
 
 	return pdf
 }

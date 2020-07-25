@@ -11,7 +11,7 @@ import (
 type Agent struct{}
 
 func (a *Agent) Robots(url string) string {
-	url = a.checkURL(url)
+	url = a.urlsuffixhttp(url)
 	fmt.Println("\r\nRetrieving", url, "/robots.txt\r\n-------------\r\nResponse Status:")
 
 	r, e := http.Get(url + "/robots.txt")
@@ -36,12 +36,12 @@ func (a *Agent) Robots(url string) string {
 	}
 
 	//	Body
-	fmt.Println("Contents of robots.txt\r\n-------------\r\n", string(body))
+	// fmt.Println("Contents of robots.txt\r\n-------------\r\n", string(body))
 	return string(body)
 }
 
 func (a *Agent) Head(url string) string {
-	url = a.checkURL(url)
+	url = a.urlsuffixhttp(url)
 	r, e := http.Head(url)
 
 	if e != nil {
@@ -51,7 +51,7 @@ func (a *Agent) Head(url string) string {
 			//log.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking")
 			return fmt.Sprint("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking - Error here is:\r\n", e)
 		}
-		return fmt.Sprint("Error encountered while requesting /robots.txt", e)
+		return fmt.Sprint("Error encountered while requesting HEAD, ",url, " - ", e)
 
 	}
 
@@ -66,7 +66,7 @@ func (a *Agent) Head(url string) string {
 }
 
 func (a *Agent) RequestMethod(method, url string) string {
-	url = a.checkURL(url)
+	url = a.urlsuffixhttp(url)
 	rq, e := http.NewRequest(method, url, nil)
 	var client http.Client
 	r, e := client.Do(rq)
@@ -80,8 +80,8 @@ func (a *Agent) RequestMethod(method, url string) string {
 		return fmt.Sprint("Request Method -", e)
 
 	}
-	fmt.Println(r)
-	fmt.Println(r.Status)
+	// fmt.Println(r)					//	Maybe Add them in one var
+	// fmt.Println(r.Status)
 	body, e := ioutil.ReadAll(r.Body)
 	if e != nil {
 		// log.Println(e)
@@ -92,7 +92,7 @@ func (a *Agent) RequestMethod(method, url string) string {
 }
 
 func (a *Agent) RequestMethodStatus(method, url string) string {
-	url = a.checkURL(url)
+	url = a.urlsuffixhttp(url)
 	rq, e := http.NewRequest(method, url, nil)
 	var client http.Client
 	r, e := client.Do(rq)
@@ -115,36 +115,42 @@ func (a *Agent) RequestMethodStatus(method, url string) string {
 }
 
 func (a *Agent) OptionsRequest(url string) string {
-	// url = a.checkURL(url)
-	// fmt.Println(url)
-	fmt.Println("\r\nHTTP OPTIONS Request - Retrieve Supported HTTP Methods\r\n-------------\r\nResponse Status:")
+	url = a.urlsuffixhttp(url)
+	// // fmt.Println(url)
+	// fmt.Println("\r\nHTTP OPTIONS Request - Retrieve Supported HTTP Methods\r\n-------------")	//	\r\nResponse Status:")
 	var r string
 	r = a.RequestMethod("OPTIONS", url)
 	// fmt.Println("Response to the OPTIONS HTTP Request:\r\n", r)
 	return fmt.Sprintln("Response to the OPTIONS HTTP Request:\r\n", r)
 }
 
-func (a *Agent) OptionsVerify(url string) {
-	// url = a.checkURL(url)
+func (a *Agent) OptionsVerify(url string) []string {
+	url = a.urlsuffixhttp(url)
+	var rs string
+	var res []string
 	options := make([]string, 7)                                                  //	9
 	options = []string{"CONNECT", "GET", "HEAD", "PATCH", "POST", "PUT", "TRACE"} //	"DELETE", "OPTIONS",
 
-	fmt.Println("\r\nSupported Options:\r\n-------------")
-	var res string
-	// @TODO	request each and every one.
+	// fmt.Println("\r\nSupported Options:\r\n-------------")
 	for i := 0; i < len(options); i++ {
-		res = a.RequestMethodStatus(options[i], url)
-		fmt.Println(options[i], "-", res)
+		rs = a.RequestMethodStatus(options[i], url)
+		// fmt.Println(options[i], "-", res)	//	return and parse on caller
+		res = append(res, options[i] + "-" + rs)
 	}
-
+	return res
 }
 
 // Get URL, check for http:// or https:// prefix
 // add http:// if not present.
 // Exit program if url contains https:// until implemented
-func (a *Agent) checkURL(url string) string {
-	if !strings.Contains(url, "http://") || !strings.Contains(url, "https://") {
+func (a *Agent) urlsuffixhttp(url string) string {
+	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
 		url = "http://" + url
+	} else if !strings.Contains(url, "http://") && strings.Contains(url, "https://") {
+		url = strings.TrimPrefix(url, "https://")
+		url = "http://" + url
+	} else if strings.Contains(url, "http://") {
+		//	Leave unchanged
 	}
 	return url
 }
