@@ -214,7 +214,7 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	pdf.Ln(12)
 
 	pdf.SetFont(fontname, "", 20)
-	var date string = time.Now().Format("Mon Sep 9, 2020")
+	var date string = time.Now().Format("2006-01-02 15:04:05 Monday")
 	pdf.Cell(40, 10, date)
 	pdf.Ln(12)
 	//	Note on Cell() & Ln()
