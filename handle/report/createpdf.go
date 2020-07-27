@@ -147,7 +147,7 @@ func (h *pdfHandler) pdfCreate() error {
 
 	//	Create a new PDF doc & write title & current date
 	pdf := h.newReport()
-
+/*
 	//	Filter Tool Output
 
 	//	Add Target Table
@@ -170,7 +170,7 @@ func (h *pdfHandler) pdfCreate() error {
 	pdf = h.nmapComments_MAYBE_table(pdf)
 
 	pdf = h.niktotable(pdf)
-
+*/
 	if pdf.Err() {
 		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
 		return pdf.Error()

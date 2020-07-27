@@ -154,3 +154,32 @@ func (a *Agent) urlsuffixhttp(url string) string {
 	}
 	return url
 }
+
+func (a *Agent) WrappedGet(url string) string {
+	fmt.Println("FROM WRAPPED GET")
+	url = a.urlsuffixhttp(url)
+	fmt.Println("\r\nRetrieving", url, "\r\n-------------\r\n")	//	Response Status:")
+
+	r, e := http.Get(url)
+	if e != nil {
+		if strings.Contains(url, "https://") {
+			//log.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking")
+			fmt.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking - Error here is:\r\n", e)
+		}
+		fmt.Println("Error encountered while requesting", url, e)
+	}
+
+	// //	r.Status contains the status
+	// fmt.Println(r.Status)
+
+	// //	Extract Body
+	body, e := ioutil.ReadAll(r.Body)
+	if e != nil {
+		// log.Println(e)
+		fmt.Printf("%s", e)
+	}
+
+	//	Body
+	// fmt.Println("Contents of robots.txt\r\n-------------\r\n", string(body))
+	return string(body)
+}
