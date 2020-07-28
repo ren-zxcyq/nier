@@ -136,6 +136,20 @@ func (h *Utils) Trimurlsuffixhttp(url string) string {
 	return url
 }
 
+// Receive []string
+// Return []string where each element is unique
+func (h *Utils) Uniquestrslice(strSlice []string) []string {
+    keys := make(map[string]bool)
+    list := []string{} 
+    for _, entry := range strSlice {
+        if _, value := keys[entry]; !value {
+            keys[entry] = true
+            list = append(list, entry)
+        }
+    }    
+    return list
+}
+
 /*
  *	encodes t -> base64 & url encoding
  *	uses:

@@ -261,7 +261,7 @@ func (h *execHandler) Exec() {
 	toolparser.ParsePing(ping)
 
 	// h.runTools()
-
+	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
 	h.injectionTest()
 }
 
