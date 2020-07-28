@@ -16,10 +16,7 @@ func (a *Agent) Robots(url string) string {
 
 	r, e := http.Get(url + "/robots.txt")
 	if e != nil {
-		// fmt.Printf("Error Encountered")
-		// log.Println(e)
 		if strings.Contains(url, "https://") {
-			//log.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking")
 			return fmt.Sprint("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking - Error here is:\r\n", e)
 		}
 		return fmt.Sprint("Error encountered while requesting /robots.txt", e)
@@ -31,7 +28,6 @@ func (a *Agent) Robots(url string) string {
 	//	Extract Body
 	body, e := ioutil.ReadAll(r.Body)
 	if e != nil {
-		// log.Println(e)
 		return fmt.Sprintf("%s", e)
 	}
 
@@ -45,10 +41,7 @@ func (a *Agent) Head(url string) string {
 	r, e := http.Head(url)
 
 	if e != nil {
-		// fmt.Printf("Error Encountered")
-		// log.Println(e)
 		if strings.Contains(url, "https://") {
-			//log.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking")
 			return fmt.Sprint("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking - Error here is:\r\n", e)
 		}
 		return fmt.Sprint("Error encountered while requesting HEAD, ",url, " - ", e)
@@ -57,10 +50,8 @@ func (a *Agent) Head(url string) string {
 
 	body, e := ioutil.ReadAll(r.Body)
 	if e != nil {
-		//log.Println(e)
 		return fmt.Sprintf("%s", e)
 	}
-	// fmt.Println(string(body))
 
 	return fmt.Sprint(string(body))
 }
@@ -71,10 +62,7 @@ func (a *Agent) RequestMethod(method, url string) string {
 	var client http.Client
 	r, e := client.Do(rq)
 	if e != nil {
-		//log.Println("RM", e)
-		//	If
 		if strings.Contains(url, "https://") {
-			//log.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking")
 			return fmt.Sprint("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking - Error here is:\r\n", e)
 		}
 		return fmt.Sprint("Request Method -", e)
@@ -84,10 +72,8 @@ func (a *Agent) RequestMethod(method, url string) string {
 	// fmt.Println(r.Status)
 	body, e := ioutil.ReadAll(r.Body)
 	if e != nil {
-		// log.Println(e)
 		return fmt.Sprintf("%s", e)
 	}
-	// fmt.Println(body)
 	return string(body)
 }
 
@@ -97,9 +83,7 @@ func (a *Agent) RequestMethodStatus(method, url string) string {
 	var client http.Client
 	r, e := client.Do(rq)
 	if e != nil {
-		// log.Println(e)
 		if strings.Contains(url, "https://") {
-			//log.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking")
 			return fmt.Sprint("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking - Error here is:\r\n", e)
 		}
 		return fmt.Sprint("Request Method Status - ", e)
@@ -156,30 +140,26 @@ func (a *Agent) urlsuffixhttp(url string) string {
 }
 
 func (a *Agent) WrappedGet(url string) string {
-	fmt.Println("FROM WRAPPED GET")
 	url = a.urlsuffixhttp(url)
 	fmt.Println("\r\nRetrieving", url, "\r\n-------------\r\n")	//	Response Status:")
 
 	r, e := http.Get(url)
 	if e != nil {
 		if strings.Contains(url, "https://") {
-			//log.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking")
 			fmt.Println("Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking - Error here is:\r\n", e)
 		}
 		fmt.Println("Error encountered while requesting", url, e)
 	}
 
 	// //	r.Status contains the status
-	// fmt.Println(r.Status)
+	fmt.Println(r.Status)
 
 	// //	Extract Body
 	body, e := ioutil.ReadAll(r.Body)
 	if e != nil {
-		// log.Println(e)
 		fmt.Printf("%s", e)
 	}
 
 	//	Body
-	// fmt.Println("Contents of robots.txt\r\n-------------\r\n", string(body))
 	return string(body)
 }

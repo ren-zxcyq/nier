@@ -262,26 +262,22 @@ func (h *execHandler) Exec() {
 
 	// h.runTools()
 
-	h.xSS()
+	h.injectionTest()
 }
 
-func (h *execHandler) xSS() {
+func (h *execHandler) injectionTest() {
 	//	Procedure Outline:
-
-	//	Get all URLs
-	//	Filter for FORMS	<form
-	//	Filter for params
-	//	Generate Unique Items
-	//	Submit
-	//	Get all URLs
-	//	Filter for Unique Items
+		//	Get all URLs
+		//	Filter for FORMS	<form
+		//	Filter for params
+		//	Generate Unique Items
+		//	Submit
+		//	Get all URLs
+		//	Filter for Unique Items
 	
-
 	//	Get all URLs
-	//h.xssURLsi()
-
 	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler()
-	injectionhandler.XssURLsi()
+	injectionhandler.InjURLsi()
 }
 
 func (h *execHandler) runTools() {
@@ -344,5 +340,4 @@ func (h *execHandler) runTools() {
 		h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -u=" + h.e.targetHost)
 		h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
 	*/
-	
 }
