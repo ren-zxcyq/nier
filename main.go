@@ -27,7 +27,7 @@ type elementsHandler struct {
 var hCmd elementsHandler
 
 func generateReportFile() {
-	fmt.Println("\r\nInitiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
+	fmt.Println("Initiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
 	//handlepdf.CreateDoc(outputFolder)
 	// fmt.Println(hCmd.installationDir, hCmd.outputFolder)
 	handlepdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder)
@@ -35,13 +35,13 @@ func generateReportFile() {
 }
 
 func generateFolder() {
-	fmt.Println("\r\nInitiating Folder Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
+	fmt.Println("Initiating Folder Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
 	handlefolder.CreateFolder(hCmd.outputFolder)
 	// fmt.Println("-------------")
 }
 
 func runTools() {
-	fmt.Println("\r\nInitiating Exec\r\n-------------")
+	fmt.Println("Initiating Exec\r\n-------------")
 	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools)
 	ex.Exec()
 	fmt.Println("-------------")

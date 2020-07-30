@@ -12,6 +12,7 @@ import (
 	// "io/ioutil"
 	// "reflect"
 	// "bytes"
+	// "os"
 	
 	"net/url"
 	// "resource"
@@ -22,14 +23,19 @@ import (
 )
 
 var u Utils
-type InjectionHandler struct {}
+var t Agent
+var extforms []extractedform
+type InjectionHandler struct {
+	target			string
+	targetport		int
+}
 
 
 //
-func NewInjectionHandler() *InjectionHandler {
+func NewInjectionHandler(target string, targetport int) *InjectionHandler {
 
 	//	Create InjectionHandler
-	var h InjectionHandler = InjectionHandler{}
+	var h InjectionHandler = InjectionHandler{target: target, targetport: targetport}
 
 	//fmt.Printf("Address of InjectionHandler - %p", &h) //	Prints the address of the Handler
 	return &h
@@ -42,29 +48,57 @@ func (h *InjectionHandler) InjURLsi() {
 	// urls = append(urls, "http://192.168.1.20/vehical-details.php?vhid=2")
 	// urls = append(urls, "http://192.168.1.20/robots.txt")
 	// urls = append(urls, "http://192.168.1.20/contact-us.php")
-	urls = gobusterURLs()
+	urls = h.gobusterURLs()
 
 
 	for _,url := range urls {
 		h.injRequestURLi(url)
 	}
+
+	
+	fmt.Println("--------------------------------")
+	fmt.Println("Forms Identified:")
+	for _,j := range extforms {
+		fmt.Println(j.contents)
+	}
+	// fmt.Println(extforms)
+	fmt.Println("--------------------------------")
+
+	fmt.Println("--------------------------------")
+	fmt.Println("Handle Submission:")
+	// var target = t.Urlsuffixhttp(h.target + `:` + strconv.Itoa(h.targetport))
+	for _,form := range extforms {
+		// h.injRequestURLi(url)
+		//	parse target & src
+		h.handleSubmission(form)
+	}
+
+	fmt.Println("--------------------------------")
+
 }
 
 func (h *InjectionHandler) injRequestURLi(url string) {
-	var t Agent
-	var or string
+	// var or string
+	// var extforms []extractedform
+	var tmpforms []extractedform
 
 	// r = t.WrappedGet(url)			//	h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort))
 
 	var r string
 
-	r = t.WrappedGet(url)
-	or = r
+	//	Check & add if not present - http://
+	var target = t.Urlsuffixhttp(h.target + `:` + strconv.Itoa(h.targetport))
+	fmt.Println("==============\r\n",target)
+	fmt.Println("==============\r\n",url)
 
-	if strings.Contains(or, "Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking") {
-		fmt.Println("-------------")
-		fmt.Println("[+]\tUpgrading to HTTPS")
+	r = t.WrappedGet(target)	//	h.target + url)
+	// or = r
+
+	if strings.Contains(r, "Target Responds in HTTPS - Cannot Follow through with HTTP Methods Checking") {	//	or
+		// fmt.Println("-------------")
+		fmt.Println("[+]\tUpgrading to HTTPS\t",url)
 		// tsec := utilities.NewHTTPShandler()
+		//	Swap http:// prefix to https://
 		
 		// fmt.Println("HTTPS test\r\n",h.RequestMethodStatus("OPTIONS", target))
 		// fmt.Println("_______________________", h.Robots(target))
@@ -74,22 +108,28 @@ func (h *InjectionHandler) injRequestURLi(url string) {
 		tester.TestHTTPS(h.e.targetHost)
 		tester.Robots(h.e.targetHost)
 		*/
-		fmt.Println("-------------")
+		// fmt.Println("-------------")
 	} else {								//	@TODO	consider checking for another error
-		fmt.Println("-------------")
-		fmt.Println("[+]\tContinue HTTP")
-		fmt.Println(url)
+		// fmt.Println("-------------")
+		fmt.Println("[+]\tContinue HTTP\t",url)
+		// fmt.Println(url)
 		// fmt.Println(r[0:10])
 		if len(r) == 0 {
-			fmt.Println("r LENGTH = 0")
+			// fmt.Println("r LENGTH = 0")
 		} else if len(r) >= 1 {
-			fmt.Println(r[0:1])					//	print 2 lines from each response
+			// fmt.Println(r[0:1])					//	print 2 lines from each response
 		}
 
 		//	If HTML response contains a form -> pass it to the parser
-		if strings.Contains(or, "<form") {
-			h.extractForms(r)
-			// h.handleSubmissions()
+		if strings.Contains(r, "<form") {	//	or
+			tmpforms = h.extractForms(r, h.target + url)
+			
+			uniquenesscheck(tmpforms)	//	, extforms
+			
+			
+
+
+			//	CHECK IF THEY ARE UNIQUE
 
 			// fmt.Println("YES")
 			// r := strings.Split(or, "<form")
@@ -98,36 +138,75 @@ func (h *InjectionHandler) injRequestURLi(url string) {
 			// 	//	This WORKS
 				
 			// }
+
+
+
 		} else {
-			fmt.Println("NO")
+			// fmt.Println("NO")
+			//	A <form> is not contained in the page
 		}
-		fmt.Println("-------------")
+		// fmt.Println("-------------")
 	}
 	// fmt.Println("-------------")
 	// fmt.Println(results)
 	// fmt.Println("-------------")
-}
 
-type extractedform struct {
-	method			string
-	action			string
-	enctype			string
 	
-	elements		[]string
 
-	contents		string
+	/////////////////////////////////////////////////////////////
+
+	/////////////////////////////////////////////////////////////
+
 }
 
-func (h *InjectionHandler) handleSubmissions() {
-	//	Assuming that we are working with an array of extractedforms
-	var tstform extractedform = extractedform{
-		method: http.MethodPost,
-		action: "#",
-		enctype: "",
-		elements: []string{"a:aaa", "b:bbb", "c:ccc"},
-		contents: "THESE ARE THE CONTENTS",
+func isstrinforms(str string) bool {
+
+	var r bool
+	for _,v := range extforms {
+
+		if str == v.contents {
+			r = true
+		} else {
+		}
 	}
-	submitform("http://127.0.0.1", tstform)
+
+	return r
+}
+
+func uniquenesscheck(tocheck []extractedform) {					//, list
+	if len(extforms) > 0 {
+
+		for _,v := range tocheck {
+			if !isstrinforms(v.contents) {
+				//	Appending
+				extforms = append(extforms, v)
+			} else {
+				//	Not Appending
+			}
+		}
+
+	} else {
+		extforms = append(extforms, tocheck[0])
+		uniquenesscheck(tocheck[1:])
+	}
+}
+
+func (h *InjectionHandler) handleSubmission(f extractedform) {
+	// //	Assuming that we are working with an array of extractedforms
+	// var tstform extractedform = extractedform{
+	// 	method: http.MethodPost,
+	// 	action: "#",
+	// 	enctype: "",
+	// 	elements: []string{"a:aaa", "b:bbb", "c:ccc"},
+	// 	contents: "THESE ARE THE CONTENTS",
+	// }
+	// fmt.Println("UNCOMMENT ME")
+	// submitform("http://127.0.0.1", tstform)
+	
+	//submitform("http://127.0.0.1", f)
+	var tar = t.Urlsuffixhttp(h.target + `:` + strconv.Itoa(h.targetport))
+	fmt.Println("Passing to submitform()", tar)
+	submitform(tar, f)
 
 
 	//	Currently results in the following
@@ -143,14 +222,21 @@ func (h *InjectionHandler) handleSubmissions() {
 		// a=aaa&b=bbb&c=ccc
 }
 
-// func (h *InjectionHandler) extractForms(r string) {	//(r *http.Response) {
-// 	funky4(r)
-// }
+type extractedform struct {	//	@TODO	add src
+	src				string
+	method			string
+	action			string
+	enctype			string
+	
+	elements		[]string
 
-// func funky4(test string) {
-func (h *InjectionHandler) extractForms(r string) {
+	contents		string
+}
+
+func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform {
 	//
 	//
+	var forms []extractedform
 
 	//	Ignored Elements
 	//	-	label			//	Just text
@@ -158,35 +244,52 @@ func (h *InjectionHandler) extractForms(r string) {
 
 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader((r)))
     doc.Find("form").Each(func(i int, form *goquery.Selection) {
+		
+		var f extractedform
 
-		fmt.Println("---------FOUND FORM---------")
+		f.src = r_url
+
+		// fmt.Println("---------FOUND FORM---------")
 		formhtml,_ := goquery.OuterHtml(form)
-		fmt.Println("\tEntire Form:\r\n", formhtml)
-
+		// fmt.Println("\tEntire Form:\r\n", formhtml)
+		f.contents = formhtml
+		
 
 		//	Get <form> Attributes
 		action, okaction := form.Attr("action")
 		if okaction {
-			fmt.Println("action is\t", action)
+			// fmt.Println("action is\t", action)
+			if strings.HasPrefix(action, "http://") || strings.HasPrefix(action, "https://") {
+				f.action = action
+			} else {
+				//	If action="#" || action="/test.py"	=>	concatenate with source
+				//	If action=""						=>	just use source
+				fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+				f.action = f.src + action
+			}
+			//	If action="http://"					=>	use action	(but probably just drop)
+		} else {
+			f.action = f.src
 		}
 
 		method, okmethod := form.Attr("method")
 		if okmethod {
-			fmt.Println("method is:\t", method)
+			// fmt.Println("method is:\t", method)
+			f.method = method
 		}
 
 		enctype, okenctype := form.Attr("enctype")
 		if okenctype {
-			fmt.Println("enctype is:\t", enctype)
+			// fmt.Println("enctype is:\t", enctype)
+			f.enctype = enctype
 		}
-
 		
 		//	Get <form> Elements
 
 		//	-	<output>
 		form.Find("output").Each(func(j int, output *goquery.Selection) {
 			//	Skip current <form> gracefully
-			fmt.Println("Found <output> - Notify & Go to Next <form>")
+			// fmt.Println("Found <output> - Notify & Go to Next <form>")
 			
 			// @TODO	-	Notify & Go to next form
 
@@ -200,6 +303,9 @@ func (h *InjectionHandler) extractForms(r string) {
 				outputTag += ` for="` + outputfor + `"`
 			}
 			outputTag += `>`
+
+
+			// f.elements = 
 
 			//	Notes:
 			//		-	For Now Ignore the entire form if <output> is included.
@@ -223,7 +329,7 @@ func (h *InjectionHandler) extractForms(r string) {
 
 		//	-	<button>
         form.Find("button").Each(func(j int, b *goquery.Selection) {
-			fmt.Println("\tFOUND <button>")
+			// fmt.Println("\tFOUND <button>")
 			var buttonTag string = "<button"
 			btype, oktype := b.Attr("type")
 			if oktype {
@@ -239,6 +345,7 @@ func (h *InjectionHandler) extractForms(r string) {
 			if okname {
 				// fmt.Println("\t\t<button.Name -", bname)
 				buttonTag += ` name="` + bname + `"`
+				f.elements = append(f.elements, bname + `:` + `AAAAA` + `&`)
 			}
 			bonclick, okbonclick := b.Attr("onclick")
 			if okbonclick {
@@ -246,10 +353,11 @@ func (h *InjectionHandler) extractForms(r string) {
 			}
 			buttonTag += `>`
 
-			htmlb,_ := goquery.OuterHtml(b)
-			fmt.Println("\t\tORIGINAL:\t", htmlb)
-			fmt.Println("\t\tEXTRACTED:\t", buttonTag)
-
+			// htmlb,_ := goquery.OuterHtml(b)
+			// fmt.Println("\t\tORIGINAL:\t", htmlb)
+			// fmt.Println("\t\tEXTRACTED:\t", buttonTag)
+			
+			
 			//	Notes:
 			//		-	Format:
 								// <button type="button" onclick="alert('Hello World!')">Click Me!</button>
@@ -258,7 +366,7 @@ func (h *InjectionHandler) extractForms(r string) {
 
 		//	-	<input>
 		form.Find("input").Each(func(j int, in *goquery.Selection) {
-			fmt.Println("\tFOUND <input>")
+			// fmt.Println("\tFOUND <input>")
 			var inputTag string = "<input"
 			intype, oktype := in.Attr("type")
 			if oktype {
@@ -276,6 +384,8 @@ func (h *InjectionHandler) extractForms(r string) {
 			if okname {
 				// fmt.Println("\t\t<input.Name -", inname)
 				inputTag += ` name="` + inname + `"`
+				// f.contents += inname + `:` + `AAAAA` + `&`
+				f.elements = append(f.elements, inname + `:` + `BBBBB` + `&`)
 			}
 
 			inlist,okinlist := in.Attr("list")
@@ -294,9 +404,9 @@ func (h *InjectionHandler) extractForms(r string) {
 								}
 								optTag += `>`
 				
-								opthtml,_ := goquery.OuterHtml(opt)
-								fmt.Println("\t\tORIGINAL:\t", opthtml)
-								fmt.Println("\t\tEXTRACTED:\t", optTag)
+								// opthtml,_ := goquery.OuterHtml(opt)
+								// fmt.Println("\t\tORIGINAL:\t", opthtml)
+								// fmt.Println("\t\tEXTRACTED:\t", optTag)
 							})
 							//	?Act?
 						}
@@ -322,10 +432,9 @@ func (h *InjectionHandler) extractForms(r string) {
 
 			inputTag += ">"
 
-			htmli,_ := goquery.OuterHtml(in)
-			fmt.Println("\t\tORIGINAL:\t", htmli)
-			fmt.Println("\t\tEXTRACTED:\t", inputTag)
-
+			// htmli,_ := goquery.OuterHtml(in)
+			// fmt.Println("\t\tORIGINAL:\t", htmli)
+			// fmt.Println("\t\tEXTRACTED:\t", inputTag)
 
 			//	Notes:
 			//		-	If the type attribute is omitted, the input field gets the default type: "text".
@@ -334,7 +443,7 @@ func (h *InjectionHandler) extractForms(r string) {
 
 		//	-	<textarea>
 		form.Find("textarea").Each(func(j int, txtarea *goquery.Selection) {
-			fmt.Println("\tFOUND <textarea>")
+			// fmt.Println("\tFOUND <textarea>")
 			var txtareaTag string = `<textarea`
 
 			txtareaname, oktxtareaname := txtarea.Attr("name")
@@ -343,9 +452,10 @@ func (h *InjectionHandler) extractForms(r string) {
 			}
 			txtareaTag += `>`
 
-			htmltxtarea,_ := goquery.OuterHtml(txtarea)
-			fmt.Println("\t\tORIGINAL:\t", htmltxtarea)
-			fmt.Println("\t\tEXTRACTED:\t", txtareaTag)
+			// htmltxtarea,_ := goquery.OuterHtml(txtarea)
+			// fmt.Println("\t\tORIGINAL:\t", htmltxtarea)
+			// fmt.Println("\t\tEXTRACTED:\t", txtareaTag)
+			f.elements = append(f.elements, txtareaname + `:` + `CCCCC` + `&`)
 
 			//	Notes:
 			//		-	Format:
@@ -358,7 +468,7 @@ func (h *InjectionHandler) extractForms(r string) {
 
 		//	-	<select>	//	drop-down list
 		form.Find("select").Each(func(j int, sl *goquery.Selection) {
-			fmt.Println("\tFOUND <select>")
+			// fmt.Println("\tFOUND <select>")
 
 			var slTag string = "<select"
 			slnameval,okslnameval := sl.Attr("name")
@@ -371,9 +481,9 @@ func (h *InjectionHandler) extractForms(r string) {
 			}
 			slTag += `>`
 
-			htmlsl,_ := goquery.OuterHtml(sl)
-			fmt.Println("\t\tORIGINAL:\t", htmlsl)
-			fmt.Println("\t\tEXTRACTED:\t", slTag)
+			// htmlsl,_ := goquery.OuterHtml(sl)
+			// fmt.Println("\t\tORIGINAL:\t", htmlsl)
+			// fmt.Println("\t\tEXTRACTED:\t", slTag)
 
 
 			sl.Find("option").Each(func(o int, opt *goquery.Selection) {
@@ -385,9 +495,9 @@ func (h *InjectionHandler) extractForms(r string) {
 				}
 				optTag += `>`
 
-				opthtml,_ := goquery.OuterHtml(opt)
-				fmt.Println("\t\tORIGINAL:\t", opthtml)
-				fmt.Println("\t\tEXTRACTED:\t", optTag)
+				// opthtml,_ := goquery.OuterHtml(opt)
+				// fmt.Println("\t\tORIGINAL:\t", opthtml)
+				// fmt.Println("\t\tEXTRACTED:\t", optTag)
 	
 			})
 			//	Notes:
@@ -410,7 +520,13 @@ func (h *InjectionHandler) extractForms(r string) {
 								//	Results in
 								//	cars=volvo&cars=audi
 		})
+
+		// fmt.Println("[+]==============\r\n",f,"\r\n[+]==============\r\n")
+		// fmt.Println("-------------\r\n-------------\r\n",len(forms),"\r\n-------------\r\n-------------\r\n")
+		forms = append(forms, f)
 	})
+	// fmt.Println("=====================\r\n-------------\r\n",len(forms),"\r\n-------------\r\n=====================\r\n")
+	return forms
 	// htmlResult, _ := doc.Html()
 	// fmt.Println(htmlResult)
 	//------------------------------------------------------------------------
@@ -457,58 +573,97 @@ func submitformtest(targethost string, form extractedform) {
     r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
     resp, _ := client.Do(r)
-    fmt.Println(resp.Status)
+    fmt.Printf("%s", resp.Status)
 }
 
 
 //	Submits the given form using the autogenerated values for the fields.
 //	Returns the fields submitted
-func submitform(targethost string, form extractedform) {
+func submitform(targethost string, form extractedform) {	//	@TODO check & replace target with f.action
+	fmt.Println("SUBMITTING TO", targethost)
+	fmt.Println("\r\n",form.contents)
+	fmt.Println("\r\n",form.elements)
+	
+	//	for each element with a name value - create a unique string
+	// vvv := u.UniqueStringAlphaNum()
+	// fmt.Println(vvv)
 
-	// apiUrl := "https://api.com"
-	apiUrl := "http://127.0.0.1:9999"
-	// resource := "/user/"
+	fmt.Println("tar\t", targethost)
+	fmt.Println("form.action\t",form.action)
+	
+	//	targethost -> https://127.0.0.1:9999/resource/
+
+	// // apiUrl := "https://api.com"
+	// apiUrl := "http://127.0.0.1:9999"
+	// // resource := "/user/"
+
+
     data := url.Values{}
-/////////////////////////////////////////////////
+	/////////////////////////////////////////////////
 	elementsnumber := len(form.elements)
 	// fmt.Println("submitting elements:", elementsnumber)
 
-	//	Generate a unique string for each submission point
 
-	//	Populate data{}
-										// var submitteddata []string
+	// //	Generate a unique string for each submission point
 	if elementsnumber > 0 {
 		var tmp []string
 		for _,v := range form.elements {
-			// submitteddata = append(submitteddata, "AAAAA")
 			tmp = strings.SplitN(v,":",2)
-			data.Set(tmp[0],tmp[1])
-			fmt.Println(tmp[0],":",tmp[1])
+			data.Set(tmp[0],u.UniqueStringAlphaNum())
 		}
 	} else {
-		fmt.Println("HELLO")
-	}									
+		//	<form> contains no elements
+		//	Notify & move on to the next
+		return
+	}
 
-/////////////////////////////////////////////////
+	//	@TODO	replace this with an automated way derived of the response to the first GET
+	u,_ := url.ParseRequestURI("http://" + form.action)	//	targethost)
+	urlStr := u.String()
+	
+	client := &http.Client{}
 
-	// data.Set("name", "foo")
-    // data.Set("surname", "bar")
+	r,_ := http.NewRequest(form.method, urlStr, strings.NewReader(data.Encode()))	//	URL-encoded payload
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 
-    u, _ := url.ParseRequestURI(apiUrl)
-    // u.Path = resource
-    urlStr := u.String() // "https://api.com/user/"
+	resp, _ := client.Do(r)
+	fmt.Println("/////////////////////////////////////////////////\r\nRESPONSE")
+	fmt.Println(resp.Status)
+	// //	Populate data{}
+	// 									// var submitteddata []string
+	// if elementsnumber > 0 {
+	// 	var tmp []string
+	// 	for _,v := range form.elements {
+	// 		// submitteddata = append(submitteddata, "AAAAA")
+	// 		tmp = strings.SplitN(v,":",2)
+	// 		data.Set(tmp[0],tmp[1])
+	// 		fmt.Println(tmp[0],":",tmp[1])
+	// 	}
+	// } else {
+	// 	fmt.Println("HELLO")
+	// }									
+	// /////////////////////////////////////////////////
 
-    client := &http.Client{}
-    r, _ := http.NewRequest(http.MethodPost, urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
-    // r.Header.Add("Authorization", "auth_token=\"XXXXXXX\"")
-    // r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-    r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	// // data.Set("name", "foo")
+    // // data.Set("surname", "bar")
 
-    resp, _ := client.Do(r)
-    fmt.Println(resp.Status)
+    // u, _ := url.ParseRequestURI(apiUrl)
+    // // u.Path = resource
+    // urlStr := u.String() // "https://api.com/user/"
+
+	// client := &http.Client{}
+
+	// //	http.MethodPost
+    // r, _ := http.NewRequest(form.method, urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
+    // // r.Header.Add("Authorization", "auth_token=\"XXXXXXX\"")
+    // // r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+    // r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+
+    // resp, _ := client.Do(r)
+    // fmt.Println(resp.Status)
 }
 
-func gobusterURLs() []string {
+func (h *InjectionHandler) gobusterURLs() []string {
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	//	Filter Gobuster output
@@ -517,12 +672,13 @@ func gobusterURLs() []string {
 	var gobuster string = u.ReturnFileContentsStr(gobusterOutURL)
 	res := parseGobuster(gobuster)
 	// fmt.Println("******\r\n",gobuster)
-	fmt.Println("******\r\n",res)
+	fmt.Println("******\r\n",res, "\r\n******")
 
 	var r []string
 	for _,k := range res {
 		// fmt.Println(i,"\t---\t","http://192.168.1.20" + k)
-		r = append(r, "http://192.168.1.20" + k)
+		// r = append(r, "http://192.168.1.20" + k)
+		r = append(r, k)
 	}
 	return r
 

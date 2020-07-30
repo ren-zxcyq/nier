@@ -168,6 +168,7 @@ func (h *Utils) EncodingTest() {
 	fmt.Println(h.encodeParam(t))
 	fmt.Println(h.encodeStringBase64(t))
 	fmt.Println(h.UniqueString())
+	fmt.Println(h.UniqueStringAlphaNum())
 }
 
 func (h *Utils) encodeParam(s string) string {
@@ -184,6 +185,14 @@ func (h *Utils) encodeStringBase64(s string) string {
 func (h *Utils) UniqueString() string {
 	//	Default uniuri.StdChars contains only alphanum
 	uniuri.StdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+=-`~,<.>/?;:'\"")
+	s := uniuri.New() //	default: 16 letters
+	// s := uniuri.NewLen(32)	//	set our own
+	return s
+}
+
+func (h *Utils) UniqueStringAlphaNum() string {
+	//	Default uniuri.StdChars contains only alphanum
+	uniuri.StdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789")
 	s := uniuri.New() //	default: 16 letters
 	// s := uniuri.NewLen(32)	//	set our own
 	return s

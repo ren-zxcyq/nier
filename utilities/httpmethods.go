@@ -11,7 +11,7 @@ import (
 type Agent struct{}
 
 func (a *Agent) Robots(url string) string {
-	url = a.urlsuffixhttp(url)
+	url = a.Urlsuffixhttp(url)
 	fmt.Println("\r\nRetrieving", url, "/robots.txt\r\n-------------\r\nResponse Status:")
 
 	r, e := http.Get(url + "/robots.txt")
@@ -37,7 +37,7 @@ func (a *Agent) Robots(url string) string {
 }
 
 func (a *Agent) Head(url string) string {
-	url = a.urlsuffixhttp(url)
+	url = a.Urlsuffixhttp(url)
 	r, e := http.Head(url)
 
 	if e != nil {
@@ -57,7 +57,7 @@ func (a *Agent) Head(url string) string {
 }
 
 func (a *Agent) RequestMethod(method, url string) string {
-	url = a.urlsuffixhttp(url)
+	url = a.Urlsuffixhttp(url)
 	rq, e := http.NewRequest(method, url, nil)
 	var client http.Client
 	r, e := client.Do(rq)
@@ -78,7 +78,7 @@ func (a *Agent) RequestMethod(method, url string) string {
 }
 
 func (a *Agent) RequestMethodStatus(method, url string) string {
-	url = a.urlsuffixhttp(url)
+	url = a.Urlsuffixhttp(url)
 	rq, e := http.NewRequest(method, url, nil)
 	var client http.Client
 	r, e := client.Do(rq)
@@ -99,7 +99,7 @@ func (a *Agent) RequestMethodStatus(method, url string) string {
 }
 
 func (a *Agent) OptionsRequest(url string) string {
-	url = a.urlsuffixhttp(url)
+	url = a.Urlsuffixhttp(url)
 	// // fmt.Println(url)
 	// fmt.Println("\r\nHTTP OPTIONS Request - Retrieve Supported HTTP Methods\r\n-------------")	//	\r\nResponse Status:")
 	var r string
@@ -109,7 +109,7 @@ func (a *Agent) OptionsRequest(url string) string {
 }
 
 func (a *Agent) OptionsVerify(url string) []string {
-	url = a.urlsuffixhttp(url)
+	url = a.Urlsuffixhttp(url)
 	var rs string
 	var res []string
 	options := make([]string, 7)                                                  //	9
@@ -127,7 +127,7 @@ func (a *Agent) OptionsVerify(url string) []string {
 // Get URL, check for http:// or https:// prefix
 // add http:// if not present.
 // Exit program if url contains https:// until implemented
-func (a *Agent) urlsuffixhttp(url string) string {
+func (a *Agent) Urlsuffixhttp(url string) string {
 	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
 		url = "http://" + url
 	} else if !strings.Contains(url, "http://") && strings.Contains(url, "https://") {
@@ -140,8 +140,8 @@ func (a *Agent) urlsuffixhttp(url string) string {
 }
 
 func (a *Agent) WrappedGet(url string) string {
-	url = a.urlsuffixhttp(url)
-	fmt.Println("\r\nRetrieving", url, "\r\n-------------\r\n")	//	Response Status:")
+	url = a.Urlsuffixhttp(url)
+	// fmt.Println("\r\nRetrieving", url, "\r\n-------------\r\n")	//	Response Status:")
 
 	r, e := http.Get(url)
 	if e != nil {
@@ -152,7 +152,7 @@ func (a *Agent) WrappedGet(url string) string {
 	}
 
 	// //	r.Status contains the status
-	fmt.Println(r.Status)
+	fmt.Println("[+]\t\t",r.Status)
 
 	// //	Extract Body
 	body, e := ioutil.ReadAll(r.Body)

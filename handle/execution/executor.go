@@ -276,7 +276,7 @@ func (h *execHandler) injectionTest() {
 		//	Filter for Unique Items
 	
 	//	Get all URLs
-	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler()
+	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort)
 	injectionhandler.InjURLsi()
 }
 
