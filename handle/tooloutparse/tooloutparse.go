@@ -44,7 +44,7 @@ func (h *Toolparser) ParseNmapSV(cmdout string) string {
 		// // fmt.Println(extract[1])
 		extract = strings.Split(extract[1], "Service detection performed.")
 		// // fmt.Println(extract[0])
-		// //	@TODO	-	Connect with Reporting
+		// //	?DONE?@TODO	-	Connect with Reporting
 		return extract[0]
 	} else {
 		//	Nmap did not run smoothly. "Host is up" was not part of Stdout

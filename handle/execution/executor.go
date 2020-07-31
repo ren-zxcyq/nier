@@ -256,7 +256,7 @@ func (h *execHandler) Exec() {
 	var u utilities.Utils
 
 	//	Ping
-	var ping string = h.execCmd(h.e.tools["ping"] + " -" + pcount + " 1 " + u.Trimurlsuffixhttp(h.e.targetHost))
+	var ping string = h.execCmd(h.e.tools["ping"] + " -" + pcount + " 1 " + u.Trimurlprefixhttp(h.e.targetHost))
 	//fmt.Printf(ping)
 	toolparser.ParsePing(ping)
 
@@ -276,8 +276,8 @@ func (h *execHandler) injectionTest() {
 		//	Filter for Unique Items
 	
 	//	Get all URLs
-	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort)
-	injectionhandler.InjURLsi()
+	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.sessionTokens)
+	injectionhandler.InjFormCheck()
 }
 
 func (h *execHandler) runTools() {

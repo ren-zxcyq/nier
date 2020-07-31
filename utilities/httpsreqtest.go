@@ -38,7 +38,7 @@ func NewHTTPShandler() *HTTPShandler {
 // }
 
 func (h *HTTPShandler) Robots(url string) string {
-	url = h.Urlsuffixhttps(url)
+	url = h.Urlprefixhttps(url)
 	fmt.Println("\r\nRetrieving", url, "/robots.txt\r\n-------------\r\nResponse Status:")
 
 	//	Body
@@ -51,7 +51,7 @@ func (h *HTTPShandler) Head(url string) string {
 }
 
 func (h *HTTPShandler) RequestMethodStatus(method, url string) string {
-	url = h.Urlsuffixhttps(url)
+	url = h.Urlprefixhttps(url)
 	rq, e := http.NewRequest(method, url, nil)
 	r, e := h.client.Do(rq)
 	if e != nil {
@@ -62,7 +62,7 @@ func (h *HTTPShandler) RequestMethodStatus(method, url string) string {
 }
 
 func (h *HTTPShandler) OptionsRequest(url string) string {
-	url = h.Urlsuffixhttps(url)
+	url = h.Urlprefixhttps(url)
 	// // fmt.Println(url)
 	// fmt.Println("\r\nHTTP OPTIONS Request - Retrieve Supported HTTP Methods\r\n-------------")	//	\r\nResponse Status:")
 	var r string
@@ -72,7 +72,7 @@ func (h *HTTPShandler) OptionsRequest(url string) string {
 }
 
 func (h *HTTPShandler) RequestMethod(method, url string) string {
-	url = h.Urlsuffixhttps(url)
+	url = h.Urlprefixhttps(url)
 	rq, e := http.NewRequest(method, url, nil)
 	//var client http.Client
 	r, e := h.client.Do(rq)
@@ -92,7 +92,7 @@ func (h *HTTPShandler) RequestMethod(method, url string) string {
 
 
 func (h *HTTPShandler) OptionsVerify(url string) []string {
-	url = h.Urlsuffixhttps(url)
+	url = h.Urlprefixhttps(url)
 	var rs string
 	var res []string
 	options := make([]string, 7)
@@ -150,7 +150,7 @@ func (h *HTTPShandler) OptionsVerify(url string) []string {
 // Get URL, check for http:// or https:// prefix
 // add https:// if not present.
 // Exit program if url contains https:// until implemented
-func (h *HTTPShandler) Urlsuffixhttps(url string) string {
+func (h *HTTPShandler) Urlprefixhttps(url string) string {
 	if !strings.Contains(url, "http://") && !strings.Contains(url, "https://") {
 		url = "https://" + url
 	} else if strings.Contains(url, "http://") {

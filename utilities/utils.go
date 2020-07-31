@@ -125,7 +125,7 @@ func (h *Utils) SaveStringToFile(fileurl, newcontents string) {
 
 // Get URL, check for http:// or https:// prefix
 // remove if present.
-func (h *Utils) Trimurlsuffixhttp(url string) string {
+func (h *Utils) Trimurlprefixhttp(url string) string {
 	if strings.Contains(url, "http://") {
 		url = strings.TrimPrefix(url, "http://")
 	} else if strings.Contains(url, "https://") {
@@ -196,4 +196,28 @@ func (h *Utils) UniqueStringAlphaNum() string {
 	s := uniuri.New() //	default: 16 letters
 	// s := uniuri.NewLen(32)	//	set our own
 	return s
+}
+
+func (h *Utils) StringCookiesToList(s string) []string {
+	var cookies []string
+	if strings.Contains(s, ";") {
+		cookies = strings.Split(s,";")
+		fmt.Println(cookies)
+		for _,v := range cookies {
+			h.StringCookiesToList(v)
+		}
+	} else {
+		cookies = append(cookies, s)
+	}
+	return cookies
+}
+
+func (h *Utils) SeparateCookie(s string) []string {
+	var cookie []string
+	if strings.Contains(s, ":") {
+		cookie = strings.SplitN(s,":",2)
+	} else {
+		fmt.Println("Cookie does not contain `:`. Use no cookie instead.")
+	}
+	return cookie
 }
