@@ -260,8 +260,21 @@ func (h *execHandler) Exec() {
 	//fmt.Printf(ping)
 	toolparser.ParsePing(ping)
 
-	// h.runTools()
+	// // h.runTools()
+	// if len(h.e.sessionTokens) > 0 {
+	// 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -c \"" + h.e.sessionTokens + "\" -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
+	// 	h.relativeUrlSpider()
+
+	// } else {
 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
+	h.relativeUrlSpider()
+
+	// }
+
+	//	hrefs
+	//	Merge lists
+	//	Spider
+	//	Merge lists
 	h.injectionTest()
 }
 
@@ -276,8 +289,16 @@ func (h *execHandler) injectionTest() {
 		//	Filter for Unique Items
 	
 	//	Get all URLs
-	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.sessionTokens)
+	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens)
 	injectionhandler.InjFormCheck()
+}
+
+func (h *execHandler) relativeUrlSpider() {
+	var relurlspider *utilities.RelativeLinkSpider = utilities.NewRelativeLinkSpider(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens)
+	// var results string = 
+	relurlspider.ReqURLs()
+	// u.SaveStringToFile(h.e.outputFolder + "/links_gobuster_and_relspider.txt", results)
+	
 }
 
 func (h *execHandler) runTools() {

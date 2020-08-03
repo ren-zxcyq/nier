@@ -202,7 +202,7 @@ func (h *Utils) StringCookiesToList(s string) []string {
 	var cookies []string
 	if strings.Contains(s, ";") {
 		cookies = strings.Split(s,";")
-		fmt.Println(cookies)
+		// fmt.Println(cookies)
 		for _,v := range cookies {
 			h.StringCookiesToList(v)
 		}
@@ -218,6 +218,7 @@ func (h *Utils) SeparateCookie(s string) []string {
 		cookie = strings.SplitN(s,":",2)
 	} else {
 		fmt.Println("Cookie does not contain `:`. Use no cookie instead.")
+		fmt.Println(s)
 	}
 	return cookie
 }
