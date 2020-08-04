@@ -3,9 +3,7 @@
 ## Installation
 ```
 go get github.com/ren-zxcyq/nier
-cd into the above directory and run build & install
-go build
-go install
+go install github.com/ren-zxcyq/nier
 ```
 
 ## Run
