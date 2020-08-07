@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
-	// "path/filepath"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -258,24 +258,18 @@ func (h *execHandler) Exec() {
 	//	Ping
 	var ping string = h.execCmd(h.e.tools["ping"] + " -" + pcount + " 1 " + u.Trimurlprefixhttp(h.e.targetHost))
 	//fmt.Printf(ping)
-	toolparser.ParsePing(ping)
-
+	if !toolparser.ParsePing(ping) {
+		fmt.Println("[*] Host Unreachable.")
+		os.Exit(1)
+	}
+	h.runTools()
 	// // h.runTools()
 	// if len(h.e.sessionTokens) > 0 {
 	// 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -c \"" + h.e.sessionTokens + "\" -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
 	// 	h.relativeUrlSpider()
 
 	// } else {
-	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
-	h.relativeUrlSpider()
 
-	// }
-
-	//	hrefs
-	//	Merge lists
-	//	Spider
-	//	Merge lists
-	h.injectionTest()
 }
 
 func (h *execHandler) injectionTest() {
@@ -301,10 +295,21 @@ func (h *execHandler) relativeUrlSpider() {
 	
 }
 
+func (h *execHandler) appspider() {
+	fmt.Println("APP SPIDER RUN")
+	var appspider *utilities.AppSpider = utilities.NewAppSpider(h.e.targetHost, h.e.targetPort, h.e.outputFolder)
+	appspider.Prepare()
+	fmt.Println("APP SPIDER RUN")
+	h.execInteractive(h.e.tools["gospider"] + " -S " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")) + " --depth 0 --no-redirect -t 50 -c 3 --cookie \"" + h.e.sessionTokens + "\" --blacklist \"log\" > spiderout.txt")
+
+	// h.execInteractive(h.e.tools["gospider"] + " -S " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")) + " --depth 0 --no-redirect -t 50 -c 3 --cookie \"" + h.e.sessionTokens + "\" --blacklist -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")))
+
+}
+
 func (h *execHandler) runTools() {
-	nmapOutFilesURL := path.Join(h.e.outputFolder, "nmap_1_sSV")
-	fmt.Println(nmapOutFilesURL)
-	/*
+	// nmapOutFilesURL := path.Join(h.e.outputFolder, "nmap_1_sSV")
+	// fmt.Println(nmapOutFilesURL)
+
 	//	Web Server Fingerprinting
 	var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
 	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
@@ -312,19 +317,31 @@ func (h *execHandler) runTools() {
 	h.execCmd(h.e.tools["nmap"] + " -Pn -p- -vv -sTV -T5 --script=banner -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-banners")) + " " + h.e.targetHost)
 	h.execCmd(h.e.tools["httprint"] + " -P0 -s /usr/share/httprint/signatures.txt -ox " + filepath.ToSlash(path.Join(h.e.outputFolder, "/httprint-srv-version")) + " -h " + h.e.targetHost)
 	h.checkHTTPMethods()
-		
+
 	//	Application Comments
 	h.getRobots()
 	h.execCmd(h.e.tools["nmap"] + " -Pn -p" + strconv.Itoa(h.e.targetPort) + " --script=http-comments-displayer -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-comments")) + " " + h.e.targetHost)
 	//	@Uncoment
 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
 	// h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
-	
+
+	//h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
+	h.relativeUrlSpider()
+
+	h.appspider()
+	//	hrefs
+	//	Merge lists
+	//	Spider
+	//	Merge lists
+	h.injectionTest()
+
 	//	Vulnerability Testing
 	h.execCmd(h.e.tools["nmap"] + " -Pn --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
 	//var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
 	h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + filepath.ToSlash(path.Join(h.e.outputFolder, "nikto.txt")))
 	
+	/*
+
 	//	@Uncoment
 	// h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
 	*/

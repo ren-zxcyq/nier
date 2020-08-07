@@ -22,17 +22,20 @@ func NewToolparser() *Toolparser {
 	return &h
 }
 
-func (h *Toolparser) ParsePing(cmdout string) {
+func (h *Toolparser) ParsePing(cmdout string) bool {
 
+	var r bool = true
 	if strings.Contains(cmdout, "1 packets transmitted, 1 received, 0% packet loss") {
 		fmt.Println("Ping - OK")
 		//	Did receive Reply
 	} else {
 		fmt.Println("Ping - FAIL")
+		r = false
 		//	Did not receive Reply Host is unreachable
 		//	@TODO	-	?Fail Gracefully?
 	}
 	fmt.Println(cmdout)
+	return r
 }
 
 func (h *Toolparser) ParseNmapSV(cmdout string) string {
@@ -81,9 +84,9 @@ func (h *Toolparser) ParseNikto(cmdout string) []string {
 	var extract []string
 
 	if strings.Contains(cmdout, "No web server found on") && strings.Contains(cmdout, "0 host(s) tested") {
-		fmt.Println("Nikto - OK")
+		fmt.Println("\r\n\r\n[*]\tNikto - FAIL")
 	} else {
-		fmt.Println("Nikto - FAIL")
+			fmt.Println("\r\n\r\n[*]\tNikto - OK")
 	}
 	// fmt.Println(cmdout)
 

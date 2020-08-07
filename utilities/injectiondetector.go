@@ -29,6 +29,7 @@ var target string
 var extforms []extractedform
 // var submitedforms []extractedform
 var possibleinjections string
+var flaggedforms []extractedform
 
 type InjectionHandler struct {
 	target			string
@@ -100,52 +101,33 @@ func (h *InjectionHandler) InjFormCheck() {
 
 	fmt.Println("\r\n[*]\tSubmitting <forms>\r\n")	//-------------")
 	
-	// if h.debug {
-	// 	fmt.Println("\r\n--------------------------------")
-	// 	fmt.Println("Handle Submission:\r\n/////////////////////////////////////////////////")
-	// }
-	// var target = t.Urlprefixhttp(h.target + `:` + strconv.Itoa(h.targetport))
-
 	for i,_ := range extforms {
-		// if strings.Contains(extforms[i].src,"testimonial") {
-		// 	fmt.Println("AAAAAAAAAA\r\nAAAAAAAAAAAAAA\r\nAAAAAAAAAAAAAA\r\nAAA")
-		// 	fmt.Println(extforms[i].src)
 		h.handleSubmission(&extforms[i])						//	Check if this actually works
-		// fmt.Println("AAAAAAAAAA\r\nAAAAAAAAAAAAAA\r\nAAAAAAAAAAAAAA\r\nAAA")
-
-		// } else {
-		// 	fmt.Println("NOPE")
-		// }
-
 	}
 
 	h.checkforuqstrings(urls)									//	@TODO	Swap within for a method that submits cookies
-/*	//	@UNCOMMENT
-	// fmt.Println("--------------------------------")
-	// fmt.Println("Checking application for strings submitted")
-	// h.checkforuqstrings(urls)	//"http://" + h.target + h.targetport + urls)
-	// for q := 20; q > 0; q-- {
-	// 	fmt.Println(q)
-	// 	h.checkforuqstrings([]string{"/"})		//	Comment this out
-	// }
-	// fmt.Println("--------------------------------")
-*/
+
 	if len(possibleinjections) > 0 {
 
 		var location string = h.outputFolder + "/form_injection_detection.txt"
 		fmt.Println("\r\n[*]\tWriting <form> Submission Results to file:\t" + location + "\r\n")
 		u.SaveStringToFile(location, possibleinjections)
 	}
+	//	@TODO
+	// fmt.Println("\r\n[*]\tForms Identified as Origins of User Controlled Input\r\n")
+	// for _,j := range flaggedforms {
+	// 	fmt.Println("i\t",j.contents)
+	// }
 
-	// fmt.Println(")))))))))))))))))))))))))(((((((((((((((((((((((((((((",len(possibleinjections))
-	fmt.Println("\r\n")
+	// fmt.Println(len(possibleinjections))
+	// fmt.Println("\r\n")
 }
 
 func (h *InjectionHandler) getwithcookies(urltoget string) string {
 	// var target string = t.Urlprefixhttp(h.target + `:` + strconv.Itoa(h.targetport) + urltoget)
 
 	
-	// fmt.Println("GET WITH COOKIES", urltoget)
+	// GET WITH COOKIES urltoget
 	rurl,errurl := url.ParseRequestURI(urltoget)	//h.httpprefix +  + urltoget)	//	h.httpprefix + form.action)	//	targethost)
 	if errurl != nil {
 		fmt.Printf("\r\nparsing error - %s", errurl, "\r\n")
@@ -155,10 +137,6 @@ func (h *InjectionHandler) getwithcookies(urltoget string) string {
 	
 	client := &http.Client{}
 
-	// fmt.Println("URLSTR",urlStr)
-	// fmt.Println("URLSTR",urlStr)
-	// fmt.Println("URLSTR",urlStr)
-
 
 	// fmt.Println("Get With COOKIES")
 	// fmt.Println(http.MethodGet)
@@ -166,7 +144,7 @@ func (h *InjectionHandler) getwithcookies(urltoget string) string {
 	r,e := http.NewRequest(http.MethodGet, urlStr, nil)	//	URL-encoded payload
 
 	if e != nil {
-		fmt.Printf("\r\nEEEEEEERRRRR 1 - %s",e,"\r\n")
+		fmt.Printf("\r\nERR 1 - %s",e,"\r\n")
 	}
 
 
@@ -180,7 +158,7 @@ func (h *InjectionHandler) getwithcookies(urltoget string) string {
 	
 	resp, err := client.Do(r)
 	if err != nil {
-		fmt.Printf("\r\nEEEEEEERRRRR 2 - %s",err,"\r\n")
+		fmt.Printf("\r\nERR 2 - %s",err,"\r\n")
 	}
 	
 	
@@ -209,7 +187,7 @@ func (h *InjectionHandler) getwithcookiesforuqstrings(urltoget string) string {
 	r,e := http.NewRequest(http.MethodGet, urlStr, nil)	//	URL-encoded payload
 
 	if e != nil {
-		fmt.Printf("\r\nEEEEEEERRRRR 3 - %s",e,"\r\n")
+		fmt.Printf("\r\nERR 3 - %s",e,"\r\n")
 	}
 
 
@@ -222,7 +200,7 @@ func (h *InjectionHandler) getwithcookiesforuqstrings(urltoget string) string {
 
 	resp, err := client.Do(r)
 	if err != nil {
-		fmt.Printf("\r\nEEEEEEERRRRR 4 - %s",err,"\r\n")
+		fmt.Printf("\r\nERR 4 - %s",err,"\r\n")
 	}
 	
 
@@ -242,7 +220,7 @@ func (h *InjectionHandler) checkforuqstrings(urls []string) {
 	//	Check 10 times 
 	for n:=0; n < 1; n++ {
 		for _,v := range urls {
-			
+
 			if !strings.Contains(v,"log") {	//	avoid logging out
 
 				//	Check & add if not present - http://
@@ -251,91 +229,44 @@ func (h *InjectionHandler) checkforuqstrings(urls []string) {
 				target = target + v
 				// fmt.Println("==============\t\t",url)
 
-				
-				
-					var r string = h.getwithcookiesforuqstrings(target)
+				var r string = h.getwithcookiesforuqstrings(target)
 
-					for _,i := range uqstrings {	//	uqstrindex
+				for _,i := range uqstrings {	//	uqstrindex
 
+					if strings.Contains(r, i) {
 
+						for _,f := range extforms {
+							for _,val := range f.uqelemstring {
+								var tmp []string = strings.SplitN(val,":",2)
+								if tmp[1] == i {
 
-
-
-
-						// fmt.Println("i\t\t\t",i)
-						// fmt.Println(i, "\t-",len(r))
-		
-						// // fmt.Println(reflect.TypeOf(i))
-						// // if strings.Contains(r,`<a href="index.php">Home</a>`) {
-						if strings.Contains(r, i) {
-							if h.debug {
-								fmt.Println("[*]")
-								fmt.Println("[*]== FOUND: user controlled string - Potential injection")
-								fmt.Println("[*]======= at:", target, "\t-\tResponse Length:", len(r))
-								fmt.Println("[*]======= Found Sequence:",i)
-								fmt.Println("[*]")
-							}
-							possibleinjections += "[*]" + "\r\n"
-							possibleinjections += "[*]== FOUND: user controlled string - Potential injection" + "\r\n"
-							possibleinjections += "[*]======= at: " + target + "\t-\tResponse Length: " + strconv.Itoa(len(r)) + "\r\n"
-							possibleinjections += "[*]======= Found Sequence: " + i + "\r\n"
-							possibleinjections += "[*]" + "\r\n"
-							
-							for _,f := range extforms {
-
-
-
-								// yes
-
-
-								for _,val := range f.uqelemstring {
-									var tmp []string = strings.SplitN(val,":",2)
-									// fmt.Println(tmp[0],tmp[1])
-									if tmp[1] == i {
-										// uqstrings = append(uqstrings[:uqstrindex], uqstrings[uqstrindex+1:])
-										// // fmt.Println("[*]---------------------- Submitted.Param - Submitted.Sequence", tmp[0], "-", tmp[1])
-										if h.debug {
-											// fmt.Println("[*]======= Submitted.Location:",f.src)
-											// fmt.Println("[*]======= Submitted.Parameter:",tmp[0])
-											// fmt.Println("[*]======= Submitted.Sequence: ",tmp[1])
-											// fmt.Println("[*]======= Form Responsible:\r\n",f.contents)	//	@TODO - Add form.contents
-											// fmt.Println("[*]======= Request Submitted:\r\n" + f.request)	//	@TODO - Add Warning?										
-											// fmt.Println("[*]=======")
+									if isstrinforms(f.contents) {	//	?Maybe remove this?
+										if !isstringinflaggedforms(f.contents) {
+											flaggedforms = append(flaggedforms,f)
 										}
-										// fmt.Println("==============\r\n=======\r\n",target,"\t", f.src, "\t",i, "\r\n=======\r\n=======\r\n")
-										
-										fmt.Println("[*]== Found: [user controlled string]: ",i,"| [URL]:", target, "| Submitted [Location-Param]: [" + f.src,"-",tmp[0] +"]")
+
+										possibleinjections = "[*]" + "\r\n"
+										var identified string = "[*]== Found: [user controlled string]: " + i + " | [URL]: "+ target + " | Submitted [Location-Param]: [" + f.src + "-" + tmp[0] + "]"
+
+										fmt.Println(identified)
+										possibleinjections += identified + "\r\n"
+										possibleinjections += "[*]======= at: " + target + "\t-\tResponse Length: " + strconv.Itoa(len(r)) + "\r\n"
 										possibleinjections += "[*]======= Submitted.Location:" + f.src + "\r\n"
 										possibleinjections += "[*]======= Submitted.Parameter:" + tmp[0] + "\r\n"
 										possibleinjections += "[*]======= Submitted.Sequence: " + tmp[1] + "\r\n"
 										possibleinjections += "[*]======= Form Responsible:\r\n" + f.contents + "\r\n"
 										possibleinjections += "[*]======= Request Submitted:\r\n" + f.request
 										possibleinjections += "[*]=======" + "\r\n"
+
+									} else {
+										fmt.Println("[*]== Sequence appears to show up in multiple locations")
 									}
 								}
 							}
-							// var tmp []string
-							// var uq string
-							// for _,v := range form.elements {
-							// 	tmp = strings.SplitN(v,":",2)
-							// 	uq = u.UniqueStringAlphaNum()
-							// 	// fmt.Println("APPENDING", tmp[0] + ":" + uq)
-							// 	form.uqelemstring = append(form.uqelemstring, tmp[0] + ":" + uq)
-					
-								//	@HERE
-							if h.debug {
-								// fmt.Println("[*]\r\n\r\n")
-							}
-							possibleinjections += "[*]\r\n\r\n\r\n\r\n"
-							// fmt.Print(possibleinjections)
 						}
-
-						// } else {
-						// 	fmt.Println("== Checking for:",i,":\t-\tNope")
-						// }
+						possibleinjections += "[*]\r\n\r\n\r\n\r\n"
 					}
-				
-			
+				}
 			}
 		}
 	}
@@ -443,34 +374,7 @@ func isstrinforms(str string) bool {
 }
 
 func (h *InjectionHandler) handleSubmission(f *extractedform) {
-	// //	Assuming that we are working with an array of extractedforms
-	// var tstform extractedform = extractedform{
-	// 	method: http.MethodPost,
-	// 	action: "#",
-	// 	enctype: "",
-	// 	elements: []string{"a:aaa", "b:bbb", "c:ccc"},
-	// 	contents: "THESE ARE THE CONTENTS",
-	// }
-	// fmt.Println("UNCOMMENT ME")
-	// submitform("http://127.0.0.1", tstform)
-	
-	//submitform("http://127.0.0.1", f)
-	// var targethost = t.Urlprefixhttp(h.target + `:` + strconv.Itoa(h.targetport))
-
-	// fmt.Println("Submitting:\r\n-------")
-	// fmt.Println("\tSRC\t-", f.src)
-	// fmt.Println("\tMET\t-", f.method)
-	// fmt.Println("\tACT\t-", f.action)
-	// fmt.Println("\tENC\t-", f.enctype)
-	// fmt.Println("\tELM\t-", f.elements)
-	// fmt.Println("\tUQL\t-", f.uqelemstring)
-	// fmt.Println("\tCON\t-", f.contents)
-	// fmt.Println("-------")
-
-	// fmt.Println("CALLING submitform()")
 	h.submitform(f)
-
-
 }
 
 var scounter, fcounter int
@@ -478,17 +382,6 @@ var scounter, fcounter int
 //	Returns the fields submitted
 func (h *InjectionHandler) submitform(form *extractedform) {
 	
-	// fmt.Println("IN submitform()")
-	// if !strings.Contains(form.action, "post-testimonial.php") {
-	// 	fmt.Println("IN submitform() - RETURNING 1")
-
-	// 	return
-	// } else {
-	// 	fmt.Println("IN submitform() - YES")
-	// }
-	
-	// fmt.Println("IN submitform() - Contains")
-
 	data := url.Values{}
 
 	if len(form.elements) > 0 {
@@ -502,8 +395,6 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 			uq = u.UniqueStringAlphaNum()
 			// fmt.Println("APPENDING", tmp[0] + ":" + uq)
 			form.uqelemstring = append(form.uqelemstring, tmp[0] + ":" + uq)
-
-			//	@HERE
 
 			if tmp[0] != "submit" {
 				data.Set(tmp[0],uq)
@@ -569,30 +460,6 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 		r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
 	}
 
-	//	Show Param info
-	// fmt.Println("\t", urlStr)
-	// for j,jj := range data {
-	// 	fmt.Println("\t", j, "\t\t", jj)
-	// }
-
-
-	// // fmt.Println(r.Header)
-	// fmt.Println("\r\n++++++++++++++++++++++++++\r\n",reflect.TypeOf(r.Header), "\r\n++++++++++++++++++++++++++\r\n")
-	// fmt.Println(")))))))))", r.Method, "((((((((")
-	// pp,_ := url.Parse(r.URL.String())
-	// fmt.Println(")))))))))PATH\t", pp.Path, "((((((((")
-	// fmt.Println(")))))))))", r.RequestURI, "((((((((")
-	// fmt.Println(")))))))))", r.Proto, "((((((((")
-	// // fmt.Println(")))))))))encoding\t", r.TransferEncoding, "((((((((")
-	// fmt.Println(")))))))))URL\t", r.URL, "((((((((")
-	// fmt.Println(")))))))))host\t", r.Host, "((((((((")
-
-	// // fmt.Println(")))))))))", r.Header, "((((((((")
-	// for kk, vv := range r.Header {
-	// 	fmt.Println(")))))))))", kk, "((((((((",vv)
-	// }
-	// fmt.Println(")))))))))", data.Encode(), "((((((((")
-
 
 	//	Right before submitting the request
 	//	Parse the Submitted Request
@@ -641,7 +508,6 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 
 func (h *InjectionHandler) combinedURLs() []string {
 
-	////////////////////////////////////////////////////////////////////////////////////////
 	//	Filter Gobuster output
 	var gobusterOutURL string = h.outputFolder + "/links_gobuster_and_rel.txt"	//	"/root/Desktop/report/gobuster-URLs"
 
@@ -684,8 +550,7 @@ func (h *InjectionHandler) parseGobuster(cmdout string) []string {
 
 
 func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform {
-	//
-	//
+
 	var forms []extractedform
 
 	//	Ignored Elements
@@ -714,6 +579,7 @@ func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform 
 				action = ""
 			}
 
+			//	@TODO	Consider using native go
 			if strings.HasPrefix(action, "http://") || strings.HasPrefix(action, "https://") {
 				f.action = action
 			} else {
@@ -741,13 +607,11 @@ func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform 
 
 		method, okmethod := form.Attr("method")
 		if okmethod {
-			// fmt.Println("method is:\t", method)
 			f.method = strings.ToUpper(method)
 		}
 
 		enctype, okenctype := form.Attr("enctype")
 		if okenctype {
-			// fmt.Println("enctype is:\t", enctype)
 			f.enctype = enctype
 		}
 		
@@ -771,8 +635,6 @@ func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform 
 			}
 			outputTag += `>`
 
-
-			// f.elements = 
 
 			//	Notes:
 			//		-	For Now Ignore the entire form if <output> is included.
@@ -1007,7 +869,6 @@ func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform 
 		// fmt.Println("[+]==============\r\n",f,"\r\n[+]==============\r\n")
 		// fmt.Println("-------------\r\n-------------\r\n",len(forms),"\r\n-------------\r\n-------------\r\n")
 		f = *(h.formsoftCheck(&f))
-		// h.formsoftCheck(&f)
 		if !(&f == nil) {
 			forms = append(forms, f)
 		}
@@ -1028,4 +889,15 @@ func (h *InjectionHandler) formsoftCheck(f *extractedform) *extractedform {
 		}
 	}
 		return f
+}
+
+func isstringinflaggedforms(str string) bool {
+	var r bool
+	for _,v := range flaggedforms {
+		if str == v.contents {
+			r = true
+		}
+	}
+
+	return r
 }

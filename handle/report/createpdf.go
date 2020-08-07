@@ -147,7 +147,7 @@ func (h *pdfHandler) pdfCreate() error {
 
 	//	Create a new PDF doc & write title & current date
 	pdf := h.newReport()
-/*
+//FROM HERE
 	//	Filter Tool Output
 
 	//	Add Target Table
@@ -170,7 +170,7 @@ func (h *pdfHandler) pdfCreate() error {
 	pdf = h.nmapComments_MAYBE_table(pdf)
 
 	pdf = h.niktotable(pdf)
-*/
+//TO HERE
 	if pdf.Err() {
 		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
 		return pdf.Error()
@@ -321,7 +321,9 @@ func (h *pdfHandler) singlelinetable(pdf *gofpdf.Fpdf, tbl []string) *gofpdf.Fpd
 			// // 	fmt.Println(i,"-hie-",str)
 			// // 	pdf.CellFormat(40, 7, string(str), "1", 0, align[i], false, 0, "")
 			// fmt.Println(string(line))
+
 			pdf.CellFormat(195, 7, string(line), "1", 0, "LM", true, 0, "")
+
 			// }
 		}
 		pdf.Ln(-1)
@@ -417,7 +419,7 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 		tableCont = tableCont[1:]
 	*/
 
-	pdf = h.singlelinetable(pdf, strCont)
+	pdf = h.examplemultiwraptable(pdf, strCont)
 
 	/*
 		for _, line := range tableCont {
@@ -579,7 +581,7 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.F
 
 		} else {
 			// for i, str := range line {
-			pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
+			pdf.CellFormat(195, 7, line, "TB", 0, "LM", false, 0, "")	//	"1" -> "TB"
 			pdf.Ln(-1)
 			// fmt.Println("hELLOS", line)
 			// }
@@ -597,7 +599,7 @@ func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf
 	pdf.AddPage()
 
 	pdf.SetFont(fontname, "B", 14)
-	pdf.Cell(40, 10, "Gobuster Output")
+	pdf.Cell(40, 10, "URLs Identified")
 	pdf.Ln(-1)
 
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -619,7 +621,7 @@ func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf
 	// 	log.Println("Failed while separating lines in formatted tool output")
 	// }
 	// pdf = h.singlelinetable(pdf, strCont)
-	pdf = h.singlelinetable(pdf, res)
+	pdf = h.examplemultiwraptable(pdf, res)
 	return pdf
 }
 
@@ -808,7 +810,7 @@ func (h *pdfHandler) nmapbannertable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	var bannersout string = u.ReturnFileContentsStr(nmapBannersOutURL)
 	res := toolparser.ParseBanners(bannersout)
 
-	pdf = h.singlelinetable(pdf, res)
+	pdf = h.examplemultiwraptable(pdf, res)
 	
 	return pdf
 }
@@ -828,7 +830,7 @@ func (h *pdfHandler) nmapComments_MAYBE_table(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	var commentsout string = u.ReturnFileContentsStr(nmapCommentsOutURL)
 	res := toolparser.ParseComments(commentsout)
 
-	pdf = h.singlelinetable(pdf, res)
+	pdf = h.examplemultiwraptable(pdf, res)
 
 	return pdf
 }
@@ -841,11 +843,11 @@ func (h *pdfHandler) httprinttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.Ln(-1)
 
 	//	Filter output
-	var httprintOutURL string = path.Join(h.foldername, "httprint-srv-version")
+	var httprintOutURL string = path.Join(h.foldername, "/httprint-srv-version")
 	var httprintout string = u.ReturnFileContentsStr(httprintOutURL)
 	res := toolparser.ParseHTTPrint(httprintout)
 
-	pdf = h.singlelinetable(pdf, res)
+	pdf = h.examplemultiwraptable(pdf, res)
 
 	return pdf
 }
@@ -863,7 +865,8 @@ func (h *pdfHandler) niktotable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	var niktoout string = u.ReturnFileContentsStr(niktoOutURL)
 	res := toolparser.ParseNikto(niktoout)
 
-	pdf = h.singlelinetable(pdf, res)
+	// pdf = h.singlelinetable(pdf, res)
+	pdf = h.examplemultiwraptable(pdf, res)
 
 	return pdf
 }
@@ -882,7 +885,7 @@ func (h *pdfHandler) httpmethodstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	var httptestingout string = u.ReturnFileContentsStr(httptestingOutURL)
 	res := toolparser.ParseHTTPMethods(httptestingout)
 
-	pdf = h.singlelinetable(pdf, res)
+	pdf = h.examplemultiwraptable(pdf, res)
 
 	return pdf
 }
@@ -891,7 +894,7 @@ func (h *pdfHandler) robotstxttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
 
 	pdf.SetFont(fontname, "B", 14)
-	pdf.Cell(40,10, "HTTP: Method - Status")
+	pdf.Cell(40,10, "Contents of /robots.txt")
 											//	@TODO	Add	-	Check: httptesting.txt")
 	pdf.Ln(-1)
 
@@ -899,7 +902,7 @@ func (h *pdfHandler) robotstxttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	var robotstxtout string = u.ReturnFileContentsStr(robotstxtOutURL)
 	res := toolparser.ParseRobots(robotstxtout)
 
-	pdf = h.singlelinetable(pdf, res)
+	pdf = h.examplemultiwraptable(pdf, res)
 
 
 	return pdf
@@ -912,6 +915,14 @@ func (h *pdfHandler) whatwebtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) wpscantable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	//	@TODO	tool output is a folder		Consider just using a str for this
+	// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
+	pdf.AddPage()
+
+	return nil
+}
+
+func (h *pdfHandler) reflectedoutputtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+		//	@TODO	tool output is a folder		Consider just using a str for this
 	// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
 	pdf.AddPage()
 
@@ -942,3 +953,187 @@ func (h *pdfHandler) todo() {
 	//				-id user@email.com:password
 
 }
+
+func (h *pdfHandler) examplemultiwraptable(pdf *gofpdf.Fpdf, tbl []string) *gofpdf.Fpdf {
+	pdf.SetFont(fontname, "", 9) //	fontname, "B", 12
+	pdf.SetFillColor(255, 255, 255)	//	(240, 240, 240)
+
+	var columnWidthFraction float64 = 1.0
+	// _, lineHeight := pdf.GetFontSize()
+
+	pageWidth,_ := pdf.GetPageSize()
+	margin,_,_,_ := pdf.GetMargins()
+
+	usablePageWidth := pageWidth - 2*margin
+
+	// var maxHeight float64
+	var cellHeight float64 = 7
+
+	// pdf.AddPage()
+	var rowlength int = 112
+
+	for _,tblrow := range tbl {
+		// fmt.Println(tblrow)
+		// columnWidth := (columnWidthFraction * usablePageWidth) - 2 // -2 for table margins
+/*
+		if len(string(tblrow)) > rowlength {		//	@TODO - Consider removing the if-else statement. if already handles the situation
+			fmt.Println("HEYYEA")
+			// splitStrings := pdf.SplitText(string(tblrow), columnWidth)
+			// // if newHeight := float64(len(splitStrings)) * float64(lineHeight); newHeight > maxHeight {
+			// // 	maxHeight = newHeight
+			// // }
+			var splitStrings []string
+			// var previni int
+			// // var newini int
+
+			// for ri, rv := range tblrow {
+			// 	fmt.Println(rv)
+			// 	// res = res + string(rv)
+			// 	// fmt.Printf("i%d r %c\n", i, r)
+			// 	fmt.Println("ri----------------------------")
+			// 	if ri > 0 && (ri+1)%80 == 0 {
+			// 		// fmt.Printf("=>(%d) '%v'\n", i, res)
+			// 		// res = ""
+			// 		fmt.Println("APPENDING AT ri",ri)
+			// 		splitStrings = append(splitStrings, string(rv)[previni:ri])
+			// 		fmt.Println("PREV ri",ri)
+			// 		previni=ri
+			// 	}
+			// }
+
+			splitStrings = slicetolength(tblrow,rowlength)
+
+			var len int = len(splitStrings)
+			// for n,cellContent := range splitStrings {
+			// 	fmt.Println(cellContent)
+				
+			// 	if n==len {	//	@CHECK HERE
+			// 		fmt.Println("EQUAL")
+			// 		pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+			// 			cellContent, "LRB", 0, "L", false, 0, "")	//	LR was "1"			
+			// 	} else {
+			// 		fmt.Println("N")
+			// 		pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+			// 			cellContent, "LRB", 0, "L", false, 0, "")	//	LR was "1"
+			// 	}
+			// 	// fmt.Println("=====",n,"====",ns)
+			// 	pdf.Ln(-1)
+			// }
+			for i:=0; i<len; i++ {
+
+				if i == (len-1) {	//	It is the last
+					pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+						splitStrings[i], "LRB", 0, "L", false, 0, "")	//	LR was "1"
+				} else {			//	It is not the last
+					pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+						splitStrings[i], "LR", 0, "L", false, 0, "")	//	LR was "1"
+				}
+				pdf.Ln(-1)
+			}
+		} else {
+			fmt.Println("NOOOOO")
+			// splitStrings := pdf.SplitText(string(tblrow), columnWidth)
+			pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+				tblrow, "1", 0, "L", false, 0, "")
+			pdf.Ln(-1)
+		}
+*/
+		var splitStrings []string
+		splitStrings = slicetolength(tblrow,rowlength)
+
+		var length int = len(splitStrings)
+		for i:=0; i<length; i++ {
+
+			if i == (length-1) {	//	Last
+				pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+					splitStrings[i], "B", 0, "L", false, 0, "")	//	LR was "1"
+			} else if (i == 0) {	//	First
+				pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+					splitStrings[i], "T", 0, "L", false, 0, "")
+			} else {				//	It is not the last
+				pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
+					splitStrings[i], "", 0, "L", false, 0, "")
+			}
+			pdf.Ln(-1)
+		}
+	}
+
+	return pdf
+}
+
+func slicetolength(s string, piecesize int) []string {
+    if piecesize >= len(s) {
+        return []string{s}
+    }
+    var pieces []string
+    piece := make([]rune, piecesize)
+    len := 0
+    for _, r := range s {
+        piece[len] = r
+        len++
+        if len == piecesize {
+            pieces = append(pieces, string(piece))
+            len = 0
+        }
+    }
+    if len > 0 {
+        pieces = append(pieces, string(piece[:len]))
+    }
+    return pieces
+}
+
+/*
+func (h *pdfHandler) examplewraprowtable(pdf *gofpdf.Fpdf, tblrow []string) *gofpdf.Fpdf {
+	var columnWidthFraction float64 = 1.0
+	_, lineHeight := pdf.GetFontSize()
+
+	pageWidth,_ := pdf.GetPageSize()
+	margin,_,_,_ := pdf.GetMargins()
+
+	usablePageWidth := pageWidth - 2*margin
+
+	var maxHeight float64
+
+	for _, cellContent := range tblrow {
+		columnWidth := (columnWidthFraction * usablePageWidth) - 2 // -2 for table margins
+
+		splitStrings := pdf.SplitText(cellContent, columnWidth)
+		if newHeight := float64(len(splitStrings)) * float64(lineHeight); newHeight > maxHeight {
+			maxHeight = newHeight
+		}
+	}
+
+	for _, cellContent := range tblrow {
+		pdf.CellFormat(columnWidthFraction*usablePageWidth, maxHeight,
+			cellContent, "1", 0, "L", false, 0, "")
+			pdf.Ln(-1)
+	}
+	return pdf
+}
+*/
+
+// fmt.Println("LINE IS:",string(line))
+// //	@NOW
+// var tablelinesize int = 80
+// if l>tablelinesize {
+// 	var rownumber int = l/tablelinesize
+// 	fmt.Println("ROW IS", rownumber)
+// 	//var lastline int = l%tablelinesize
+// 	var ini,fin int
+// 	for i:=0; i<rownumber; i++ {
+// 		ini = i*rownumber
+// 		fin = (i+1)*rownumber
+// 		fmt.Println("l", l)
+// 		fmt.Println("INI", ini)
+// 		fmt.Println("FIN", fin)
+// 		fmt.Println(string(line[ini:fin]))
+// 		pdf.CellFormat(195, 7, string(line[ini:fin]), "1", 0, "LM", true, 0, "")
+// 	}
+// 	if (l%tablelinesize != 0) {
+// 		pdf.CellFormat(195, 7, string(line[fin:]), "1", 0, "LM", true, 0, "")
+// 		fmt.Println(string(line[fin:]))
+// 	}
+// } else {
+// 	//	@PREVIOUS
+// 	pdf.CellFormat(195, 7, string(line), "1", 0, "LM", true, 0, "")
+// }
