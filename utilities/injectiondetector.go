@@ -13,7 +13,9 @@ import (
 	"io/ioutil"
 	// "reflect"
 	// "bytes"
-	// "os"
+	"bufio"
+	"regexp"
+	"os"
 	
 	"net/url"
 	// "resource"
@@ -23,12 +25,15 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
+
 var u Utils
 var t Agent
 var target string
 var extforms []extractedform
 // var submitedforms []extractedform
-var possibleinjections string
+// var possibleinjections string
+var xssdiscovered string
+var inj	map[string]string
 var flaggedforms []extractedform
 
 type InjectionHandler struct {
@@ -73,45 +78,47 @@ func (h *InjectionHandler) InjFormCheck() {
 		fmt.Println("fROM inj")
 		fmt.Println(h.target)
 		fmt.Println(h.targetport)
-	
+
 		fmt.Println("Tokens:")
 		fmt.Println(h.sessiontokens)
 		fmt.Println(h.outputFolder)
 		fmt.Println(h.httpprefix)
 		fmt.Println("********************************************")	
-	
+
 		fmt.Println("--------------------------------")
 		fmt.Println("URLs Combined:")
 	}
 
-
 	var urls []string
-	
+
 	urls = h.combinedURLs()
 
 	for _,url := range urls {
-		if !strings.Contains(url,"log") {	//	avoid logging out
+		if !strings.Contains(url,"log") || !strings.Contains(url,"forgot") {	//	avoid logging out
 			// fmt.Println(url)
 			h.injRequestURLi(url)
 		} else {
 			fmt.Println("[*]== [Skipping URL]",url,"[Reason]: \"log\" is contained in the URL")
 		}
 	}
-	
 
 	fmt.Println("\r\n[*]\tSubmitting <forms>\r\n")	//-------------")
 	
 	for i,_ := range extforms {
-		h.handleSubmission(&extforms[i])						//	Check if this actually works
+		// h.handleSubmission(&extforms[i])						//	Check if this actually works
+		h.submitform(&extforms[i])
 	}
 
 	h.checkforuqstrings(urls)									//	@TODO	Swap within for a method that submits cookies
 
-	if len(possibleinjections) > 0 {
+	fmt.Println("\r\n\r\n\r\n[*]\tPossible Injections\t",len(xssdiscovered),"\r\n\t", xssdiscovered)
+	if len(xssdiscovered) > 0 {
 
 		var location string = h.outputFolder + "/form_injection_detection.txt"
 		fmt.Println("\r\n[*]\tWriting <form> Submission Results to file:\t" + location + "\r\n")
-		u.SaveStringToFile(location, possibleinjections)
+		u.SaveStringToFile(location, xssdiscovered)
+	} else {
+		fmt.Println("[*]== [Did not write file: form_injection_detection.txt]")
 	}
 	//	@TODO
 	// fmt.Println("\r\n[*]\tForms Identified as Origins of User Controlled Input\r\n")
@@ -121,6 +128,7 @@ func (h *InjectionHandler) InjFormCheck() {
 
 	// fmt.Println(len(possibleinjections))
 	// fmt.Println("\r\n")
+
 }
 
 func (h *InjectionHandler) getwithcookies(urltoget string) string {
@@ -147,14 +155,14 @@ func (h *InjectionHandler) getwithcookies(urltoget string) string {
 		fmt.Printf("\r\nERR 1 - %s",e,"\r\n")
 	}
 
+	if len(h.sessiontokens) > 0 {
+		var tokens []string = u.StringCookiesToList(h.sessiontokens)
+		for _,k := range tokens {
+			var token []string = u.SeparateCookie(k)
+			r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
 
-	var tokens []string = u.StringCookiesToList(h.sessiontokens)
-	for _,k := range tokens {
-		var token []string = u.SeparateCookie(k)
-		r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
-
+		}
 	}
-
 	
 	resp, err := client.Do(r)
 	if err != nil {
@@ -168,7 +176,6 @@ func (h *InjectionHandler) getwithcookies(urltoget string) string {
 	return string(body)
 }
 
-
 func (h *InjectionHandler) getwithcookiesforuqstrings(urltoget string) string {
 
 	rurl,errurl := url.ParseRequestURI(urltoget)	//h.httpprefix +  + urltoget)	//	h.httpprefix + form.action)	//	targethost)
@@ -180,7 +187,6 @@ func (h *InjectionHandler) getwithcookiesforuqstrings(urltoget string) string {
 	
 	client := &http.Client{}
 
-
 	// fmt.Println("Get With COOKIES")
 	// fmt.Println(http.MethodGet)
 	// fmt.Println(urlStr)
@@ -190,14 +196,14 @@ func (h *InjectionHandler) getwithcookiesforuqstrings(urltoget string) string {
 		fmt.Printf("\r\nERR 3 - %s",e,"\r\n")
 	}
 
-
-	var tokens []string = u.StringCookiesToList(h.sessiontokens)
-	for _,k := range tokens {
-		var token []string = u.SeparateCookie(k)
-		// fmt.Println("Using Token 2\t-\t",token[0],"\t-\t",token[1])
-		r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
+	if len(h.sessiontokens) > 0 {
+		var tokens []string = u.StringCookiesToList(h.sessiontokens)
+		for _,k := range tokens {
+			var token []string = u.SeparateCookie(k)
+			// fmt.Println("Using Token 2\t-\t",token[0],"\t-\t",token[1])
+			r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
+		}
 	}
-
 	resp, err := client.Do(r)
 	if err != nil {
 		fmt.Printf("\r\nERR 4 - %s",err,"\r\n")
@@ -210,66 +216,161 @@ func (h *InjectionHandler) getwithcookiesforuqstrings(urltoget string) string {
 	return string(body)
 }
 
+
+// func checkforuqstrings() iterates over the uqstrings submitted.
+// 1) sets up the [*]==== output  which is saved to file - variable: _.
+// 2) appends each form that resulted in reflection to a list.
+// 3) iterates that list, finds the form, reads an XSS Payload, modifies it, submits it.
+// 4) calls selenium to identify any potential <script>alert()</script> boxes.
 func (h *InjectionHandler) checkforuqstrings(urls []string) {
-	
 	var uqstrings []string = h.getUQstrings()	//	SAVE [] into var
 
-	if h.debug {
-		fmt.Println("uqstrings", uqstrings)
-	}
-	//	Check 10 times 
-	for n:=0; n < 1; n++ {
-		for _,v := range urls {
+	//	uqstrings []string - contains every submitted value as in - formkey:value
 
-			if !strings.Contains(v,"log") {	//	avoid logging out
+	// Our aim here is to find elements of uqstrings that are reflected.
+	// save our results to a map of the structure
+	// map {
+	// 	uqstring1 = [ url1, url2, url3],
+	// 	uqstring3 = [ url1, url3],
+	// }
+	fmt.Println("creating reflectd map")
+	var reflected map[string][]string = make(map[string][]string)
+	fmt.Println("uqstrings contain:",uqstrings)
 
-				//	Check & add if not present - http://
-				target = t.Urlprefixhttp(h.target + `:` + strconv.Itoa(h.targetport))
-				// fmt.Println("==============\t",target," - ",v,"\t==============")
-				target = target + v
-				// fmt.Println("==============\t\t",url)
 
-				var r string = h.getwithcookiesforuqstrings(target)
-
-				for _,i := range uqstrings {	//	uqstrindex
-
-					if strings.Contains(r, i) {
-
-						for _,f := range extforms {
-							for _,val := range f.uqelemstring {
-								var tmp []string = strings.SplitN(val,":",2)
-								if tmp[1] == i {
-
-									if isstrinforms(f.contents) {	//	?Maybe remove this?
-										if !isstringinflaggedforms(f.contents) {
-											flaggedforms = append(flaggedforms,f)
-										}
-
-										possibleinjections = "[*]" + "\r\n"
-										var identified string = "[*]== Found: [user controlled string]: " + i + " | [URL]: "+ target + " | Submitted [Location-Param]: [" + f.src + "-" + tmp[0] + "]"
-
-										fmt.Println(identified)
-										possibleinjections += identified + "\r\n"
-										possibleinjections += "[*]======= at: " + target + "\t-\tResponse Length: " + strconv.Itoa(len(r)) + "\r\n"
-										possibleinjections += "[*]======= Submitted.Location:" + f.src + "\r\n"
-										possibleinjections += "[*]======= Submitted.Parameter:" + tmp[0] + "\r\n"
-										possibleinjections += "[*]======= Submitted.Sequence: " + tmp[1] + "\r\n"
-										possibleinjections += "[*]======= Form Responsible:\r\n" + f.contents + "\r\n"
-										possibleinjections += "[*]======= Request Submitted:\r\n" + f.request
-										possibleinjections += "[*]=======" + "\r\n"
-
-									} else {
-										fmt.Println("[*]== Sequence appears to show up in multiple locations")
-									}
-								}
-							}
-						}
-						possibleinjections += "[*]\r\n\r\n\r\n\r\n"
-					}
+	// populate the map by
+	//	get each url
+	//	for each url
+	//	for each uq in the response
+	//	append to map[uq] += url
+	fmt.Println("populating reflectd")
+	for _,appurl := range urls {
+		if !strings.Contains(appurl,"log") || !strings.Contains(appurl,"forgot") {
+			// GET URL WITH COOKIES
+			// fmt.Println("GET WITH COOKIEs")
+			r := h.getwithcookiesforuqstrings(appurl)
+			// fmt.Println("\r\narrrrgh is",r)
+			for _, marker := range uqstrings {
+				if strings.Contains(r, marker) {
+					reflected[marker] = append(reflected[marker], appurl)
+					fmt.Println("appending to",marker,"-",appurl)
 				}
 			}
 		}
 	}
+
+	fmt.Println("ECHOING REFLECTED")
+	for m,_ := range reflected {
+		fmt.Println("\r\n-")
+		fmt.Println(m, "\t-\t", reflected[m])
+		fmt.Println("-")
+	}
+
+	fmt.Println("[*]\tBegin Injection")
+
+	h.removeelements()
+
+	for uqmapkey,uqmapvalues := range reflected {
+		usekey:
+			for _,f := range extforms {
+				// fmt.Println("\r\nFOR FORM and ",uqmapkey)
+				var found bool = false
+				findform:
+					for _,el := range f.uqelemstring {
+						if strings.Contains(el,uqmapkey) {
+							// fmt.Println("FOUND FORM")
+							found = true
+							break findform
+						}
+					}
+				if found {	//	@TODO - Make sure to continue the outer loop once this is done so that we don't check everything again.
+					// fmt.Println("found form", f.uqelemstring)
+					fmt.Println("\r\n\r\nFor mapkey:",uqmapkey,"\r\n-------------------")
+
+					// Get Payloads. I.E. Either Gen() or Read entire file
+					// h.genXSSPayloads()
+					// Read Payloads file
+					payloadfile, err := os.Open("/root/go/src/github.com/ren-zxcyq/nier/resources/poc-xss-payloads.txt")
+					if err != nil {
+						fmt.Println(err)
+					}
+					defer payloadfile.Close()
+				
+					var scanner = bufio.NewScanner(payloadfile)
+					lines := []string{}
+				
+					for scanner.Scan() {
+						lines = append(lines, scanner.Text())
+					}
+
+					// for payload in payloads
+					// submit
+					for _, line := range lines {
+						// convert line from (a0*) to (uqmapkey)
+						re := regexp.MustCompile(`(?i)\({1}[a-z0-9]+\){1}`)
+						var payload string = re.ReplaceAllString(line,`("`+uqmapkey+`");`)
+						// fmt.Println("Convert Line --", line,"\t-\t",payload)
+						// fmt.Println("Submit =>\t",payload)	//"$1"))
+
+						// // ?alt?	=>	opt for re right now
+						// // line = strings.Replace(line,"(1)","("+uqmapkey+")",1)
+						// // fmt.Println(line)
+
+
+						// build data=url.Values{}
+						data := url.Values{}		//	:= url.Values{}
+						data = url.Values{}
+						for _,el := range f.uqelemstring {
+							var tmp []string = nil
+							tmp = strings.SplitN(el,":",2)
+							if strings.Contains(tmp[1],uqmapkey) {
+								// fmt.Println("add payload\t", tmp[0],"-",payload)
+								data.Set(tmp[0],payload)
+							} else {
+								// fmt.Println("add normal\t", tmp[0],"-",tmp[1])
+								data.Set(tmp[0],tmp[1])
+							}
+						}
+
+						// fmt.Println("\r\ndata {} built successfully.\r\n")
+						for k,v := range data {
+							fmt.Println("\t",k,"\t-\t",v)
+						}
+						// fmt.Println(reflect.TypeOf(data))
+						// fmt.Println("Submitting with payload")
+						h.submitWithPayload(f, data)
+						
+
+						// selenium return the thing. if it returns break right above line range lines?
+						fmt.Println("\r\n\r\n-------------------\r\n",uqmapkey, "\r\n-------------------\r\n")
+						for _,location := range uqmapvalues {
+							
+							searchresult := h.checkForAlertInPage(location, uqmapkey)
+							
+							// fmt.Println("\r\n[*]\t----- ALERT DISCOVERY",searchresult)
+							fmt.Println("\tlocation -",location)
+							
+							if strings.Contains(searchresult,uqmapkey) {
+								xssdiscovered += "\r\n\r\n\r\n[*]\tXSS - Detected at:\t" + location
+								xssdiscovered += "\t-\r\n\tForm Location:\t" + f.src
+								xssdiscovered += "\r\n\tPayload:\t" + payload
+								xssdiscovered += "\r\n\tForm Contents:\r\n\t\t" + f.contents + "-\r\n\r\n"
+
+								// Found at least 1 - ?Jump to the next
+								break usekey
+							}
+							
+						}
+						h.removeelements()
+
+
+					}
+					break usekey
+				}
+			}
+	}
+	// fmt.Println(xssdiscovered)
+	// os.Exit(0)
 }
 
 //	@TODO CHECK getUQstrings
@@ -278,35 +379,27 @@ func (h *InjectionHandler) getUQstrings() []string {
 	for _,f := range extforms {
 		for _,k := range f.uqelemstring {
 			var t []string = strings.Split(k,":")
-			list = append(list,t[1])
+			if t[1] != "" {
+				list = append(list,t[1])
+			}
 		}
 	}
 	return list
 }
 
-func (h *InjectionHandler) urlunique(str string) bool {
-	var r bool = true
-	for _,form := range extforms {
-		if strings.Contains(form.action, str) {
-			r = false
-		}
-	}
-	return r
-}
-
 func (h *InjectionHandler) injRequestURLi(url string) {
 
 	//	Check & add if not present - http://
-	target = t.Urlprefixhttp(h.target + `:` + strconv.Itoa(h.targetport))
-	if h.debug {
-		fmt.Println("==============\t",target," - ",url,"\t==============")
-	}
-	target = target + url
-	// fmt.Println("==============\t\t",url)
+	// target = t.Urlprefixhttp(h.target + `:` + strconv.Itoa(h.targetport))
+	// if h.debug {
+	// 	fmt.Println("==============\t",target," - ",url,"\t==============")
+	// }
+	// target = target + url
+	// // fmt.Println("==============\t\t",url)
 
 	var r string
 
-	r = h.getwithcookies(target)
+	r = h.getwithcookies(url)	//	target
 	
 	if h.debug {
 		fmt.Println("getwithcookies() WAS RUN", len(r))
@@ -336,7 +429,7 @@ func (h *InjectionHandler) injRequestURLi(url string) {
 
 		//	If HTML response contains a form -> pass it to the parser
 		if strings.Contains(r, "<form") {	//	or
-			tmpforms = h.extractForms(r, h.httpprefix + h.target + url)
+			tmpforms = h.extractForms(r, url)	//	h.httpprefix + h.target + 
 			uniquenesscheck(tmpforms)	//	, extforms
 		}
 	}
@@ -373,9 +466,9 @@ func isstrinforms(str string) bool {
 	return r
 }
 
-func (h *InjectionHandler) handleSubmission(f *extractedform) {
-	h.submitform(f)
-}
+// func (h *InjectionHandler) handleSubmission(f *extractedform) {
+// 	h.submitform(f)
+// }
 
 var scounter, fcounter int
 //	Submits the given form using the autogenerated values for the fields.
@@ -394,11 +487,14 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 			tmp = strings.SplitN(v,":",2)
 			uq = u.UniqueStringAlphaNum()
 			// fmt.Println("APPENDING", tmp[0] + ":" + uq)
-			form.uqelemstring = append(form.uqelemstring, tmp[0] + ":" + uq)
+
 
 			if tmp[0] != "submit" {
+				form.uqelemstring = append(form.uqelemstring, tmp[0] + ":" + uq)				//	REMOVED UQ FROM HERE
 				data.Set(tmp[0],uq)
 			} else {
+				// fmt.Println("CONTAINS submit")
+				form.uqelemstring = append(form.uqelemstring, tmp[0] + ":")
 				data.Set(tmp[0],"")
 			}
 		}
@@ -413,6 +509,11 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 	}
 	if strings.Contains(form.contents, "password") {	//	@FILTER
 		// fmt.Println("IN submitform() - contains pass")
+		return
+	}
+
+	//	@TODO	HERE	-	remove this
+	if !strings.Contains(form.contents, "testimonial") {
 		return
 	}
 
@@ -451,15 +552,16 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	var tokens []string = u.StringCookiesToList(h.sessiontokens)
-	for _,k := range tokens {
-		var token []string = u.SeparateCookie(k)
-		if h.debug {
-			// fmt.Println("Using Token 1\t-\t",token[0],"\t-\t",token[1])
+	if len(h.sessiontokens) > 0 {
+		var tokens []string = u.StringCookiesToList(h.sessiontokens)
+		for _,k := range tokens {
+			var token []string = u.SeparateCookie(k)
+			if h.debug {
+				// fmt.Println("Using Token 1\t-\t",token[0],"\t-\t",token[1])
+			}
+			r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
 		}
-		r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
 	}
-
 
 	//	Right before submitting the request
 	//	Parse the Submitted Request
@@ -486,8 +588,8 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 
 	if h.debug {
 		// fmt.Println("^^^^^^^^^^^^^^^^^^^^")
-		// fmt.Println(requestString)
-		// fmt.Println(form.request)
+		fmt.Println(requestString)
+		fmt.Println(form.request)
 		// fmt.Println("^^^^^^^^^^^^^^^^^^^^")
 
 		// for k, vv := range r.Header {
@@ -503,13 +605,61 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 	if (h.debug) {
 		fmt.Println("\r\nRESPONSE:\t",resp.Status,"\r\n/////////////////////////////////////////////////")
 	}
-
+	fmt.Println(resp.Status)
+	if strings.Contains(resp.Status, "404") {
+		fmt.Println(form.request)
+	}
 }
 
 func (h *InjectionHandler) combinedURLs() []string {
 
+	//	Filter Spider Output
+	var combinedSpiderURLs string = h.outputFolder + "/spider_URLs.list"
+
+	var contents = u.ReturnFileContentsStr(combinedSpiderURLs)
+	res := h.ParseSpiderURLContents(contents)
+
+	var r []string
+	for _,k := range res {
+		r = append(r,k)
+	}
+
+	return r
+}
+
+func (h *InjectionHandler) ParseSpiderURLContents(cmdout string) []string {
+	var extract []string
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		fmt.Println("Failed while separating lines in fromatted tool output")
+	}
+	for _,v := range strCont {
+		if strings.HasPrefix(v, "[url] - ") {
+			v = v[8:]
+		} else {
+			fmt.Println("NO '[url] - ' prefix\t>", v,"<")
+			continue
+		}
+		if strings.Contains(v,"[code-4") {
+			fmt.Println("[ignored] - Response code of family 4xx\t>", v,"<")
+			continue
+		}
+		if strings.Contains(v,"[code-5") {
+			fmt.Println("[ignored] - Response code of family 5xx\t>", v,"<")
+			continue
+		}
+		if strings.HasPrefix(v, "[code-") {
+			v = v[13:]
+			extract = append(extract,v)
+		}
+	}
+	return extract
+}
+
+func (h *InjectionHandler) oldCombinedMethodAsINGobusterAndRelLinks() []string {
+
 	//	Filter Gobuster output
-	var gobusterOutURL string = h.outputFolder + "/links_gobuster_and_rel.txt"	//	"/root/Desktop/report/gobuster-URLs"
+	var gobusterOutURL string = h.outputFolder + "/links_gobuster_and_rel.txt"
 
 	var gobuster string = u.ReturnFileContentsStr(gobusterOutURL)
 	res := h.parseGobuster(gobuster)
@@ -533,7 +683,7 @@ func (h *InjectionHandler) combinedURLs() []string {
 //	ParseGobuster Filters out results that are of (Status: 403)
 //	Returns an array of lines.
 func (h *InjectionHandler) parseGobuster(cmdout string) []string {
-	
+
 	var extract []string
 	strCont, err := u.StringToLines(cmdout)
 	if err != nil {
@@ -559,7 +709,7 @@ func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform 
 
 	doc, _ := goquery.NewDocumentFromReader(strings.NewReader((r)))
     doc.Find("form").Each(func(i int, form *goquery.Selection) {
-		
+
 		var f extractedform
 
 		f.src = r_url
@@ -786,17 +936,10 @@ func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform 
 			// fmt.Println("\t\tEXTRACTED:\t", txtareaTag)
 			f.elements = append(f.elements, txtareaname + `:` + `BBBBB` + `&`)
 			
-			// fmt.Println("GOT EEEEEEEEEEEEEEEEEEEEEEET]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
+			// fmt.Println("GOT ]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
 			// fmt.Println(txtareaname + `:` + `BBBBB` + `&`)
 			// // f.elements = append(f.elements, txtareaname + `:` + `BBBBB` + `&`)
-			// fmt.Println("GOT EEEEEEEEEEEEEEEEEEEEEEET]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
-			
-			/*	//	@UNCOMMENT	
-
-			//	APPARENTLY THIS IS NOT EXECUTED
-			// os.Exit(0)
-
-			*/
+			// fmt.Println("GOT ]]]]]]]]]]]]]]]]]]]]]]]]]]]]")
 
 			//	Notes:
 			//		-	Format:
@@ -870,7 +1013,10 @@ func (h *InjectionHandler) extractForms(r string, r_url string) []extractedform 
 		// fmt.Println("-------------\r\n-------------\r\n",len(forms),"\r\n-------------\r\n-------------\r\n")
 		f = *(h.formsoftCheck(&f))
 		if !(&f == nil) {
+			fmt.Println("\r\n!@#$\t-\tAPPENDING FORM - ", f.contents)
 			forms = append(forms, f)
+		} else {
+			fmt.Println("\r\n!@#$\t-\tAPPENDING FORM NOT - ", f.contents)
 		}
 	})
 	if h.debug {
@@ -891,13 +1037,41 @@ func (h *InjectionHandler) formsoftCheck(f *extractedform) *extractedform {
 		return f
 }
 
-func isstringinflaggedforms(str string) bool {
-	var r bool
-	for _,v := range flaggedforms {
-		if str == v.contents {
-			r = true
+// // @TODO
+// h.genXSSPayloads()
+// h.submitWithPayload(payload)
+
+func (h *InjectionHandler) submitWithPayload(form extractedform, data url.Values) {
+	//@TODO	-	IF LEN(FORM.ELEMENTS) > 0	->	create data
+	//@TODO	-	IF form.contents contains "password"	->	return
+
+	rurl,_ := url.ParseRequestURI(form.action)	//	h.httpprefix + form.action)	//	targethost)
+	urlStr := rurl.String()
+	fmt.Println("form.action", urlStr)
+
+	client := &http.Client{}	//	@TODO	Consider how HTTPS will be handled. This has to be changed here.
+
+	r,_ := http.NewRequest(form.method, urlStr, strings.NewReader(data.Encode()))	//	URL-encoded payload
+
+	//	Setting HTTP Headers.
+	r.Header.Set("Referer", form.action)
+	r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
+	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	if len(h.sessiontokens) > 0 {
+		var tokens []string = u.StringCookiesToList(h.sessiontokens)
+		for _,k := range tokens {
+			var token []string = u.SeparateCookie(k)
+			if h.debug {
+				// fmt.Println("Using Token 1\t-\t",token[0],"\t-\t",token[1])
+			}
+			r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
 		}
 	}
 
-	return r
+	resp, _ := client.Do(r)
+	if (h.debug) {
+		fmt.Println("\r\nRESPONSE:\t",resp.Status,"\r\n/////////////////////////////////////////////////")
+	}
+	fmt.Println(resp.Status)
 }

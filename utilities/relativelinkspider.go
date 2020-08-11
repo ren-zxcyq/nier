@@ -260,12 +260,14 @@ func (h *RelativeLinkSpider) getURL(url *string) string {
 
 	r,_ := http.NewRequest(http.MethodGet, *url, nil)	//	URL-encoded payload		//	urlStr
 	// r.Header.Add("Content-Length", strconv.Itoa(len(data.Encode())))
-	for _,k := range u.StringCookiesToList(h.sessiontokens) {
-		var token []string = u.SeparateCookie(k)
-		if h.debug {
-			fmt.Println("Using Token\t-\t",token[0],"\t-\t",token[1])
+	if len(h.sessiontokens) > 0 {
+		for _,k := range u.StringCookiesToList(h.sessiontokens) {
+			var token []string = u.SeparateCookie(k)
+			if h.debug {
+				fmt.Println("Using Token\t-\t",token[0],"\t-\t",token[1])
+			}
+			r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
 		}
-		r.AddCookie(&http.Cookie{Name: token[0], Value: token[1]})
 	}
 
 	resp, _ := client.Do(r)

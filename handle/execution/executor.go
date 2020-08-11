@@ -296,14 +296,12 @@ func (h *execHandler) relativeUrlSpider() {
 }
 
 func (h *execHandler) appspider() {
-	fmt.Println("APP SPIDER RUN")
 	var appspider *utilities.AppSpider = utilities.NewAppSpider(h.e.targetHost, h.e.targetPort, h.e.outputFolder)
 	appspider.Prepare()
-	fmt.Println("APP SPIDER RUN")
-	h.execInteractive(h.e.tools["gospider"] + " -S " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")) + " --depth 0 --no-redirect -t 50 -c 3 --cookie \"" + h.e.sessionTokens + "\" --blacklist \"log\" > spiderout.txt")
-
+	fmt.Println("\r\n\r\n[*]\tSpider Launched towards the Application\r\n")
+	h.execInteractive(h.e.tools["gospider"] + " -S " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")) + " --depth 2 --no-redirect -t 50 -c 3 --cookie \"" + h.e.sessionTokens + "\" --blacklist \"log\"")
 	// h.execInteractive(h.e.tools["gospider"] + " -S " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")) + " --depth 0 --no-redirect -t 50 -c 3 --cookie \"" + h.e.sessionTokens + "\" --blacklist -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")))
-
+	appspider.Organize()
 }
 
 func (h *execHandler) runTools() {
@@ -321,7 +319,7 @@ func (h *execHandler) runTools() {
 	//	Application Comments
 	h.getRobots()
 	h.execCmd(h.e.tools["nmap"] + " -Pn -p" + strconv.Itoa(h.e.targetPort) + " --script=http-comments-displayer -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-comments")) + " " + h.e.targetHost)
-	//	@Uncoment
+	//	@Uncomment
 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
 	// h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
 
@@ -342,7 +340,7 @@ func (h *execHandler) runTools() {
 	
 	/*
 
-	//	@Uncoment
+	//	@Uncomment
 	// h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
 	*/
 	
