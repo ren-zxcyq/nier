@@ -79,7 +79,6 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 		//
 	*/
 
-	//	@STARTING HERE
 	//cOS = detectOS()
 	var u utilities.Utils
 	h.C_OS = u.DetectOS()
@@ -116,12 +115,9 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 
 	//	Determine report file path
 	// tmpstr := *outputFolderPointer
-	// fmt.Println("AAAAAA:", *outputFolderPointer)
+	// fmt.Println("*outputFolderPointer:", *outputFolderPointer)
 	//tmpPath, _ := filepath.Abs(tmpstr)	//*outputFolderPointer)
 	h.OutputFolder = *outputFolderPointer	//tmpPath
-	// fmt.Println("AAAAAA:", tmpPath)
-	// fmt.Println("AAAAAA:", h.OutputFolder)
-	// fmt.Println("AAAAAA:", *outputFolderPointer)
 	
 
 	h.SessionTokens = *sessionTokensPointer
@@ -133,9 +129,7 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	return h.toolPaths()
 }
 
-/*
- *	Reads & extracts - Tool Names & Locations
- */
+// Reads & extracts - Tool Names & Locations
 func (h *cmdlineHandler) toolPaths() map[string]string {
 	// fmt.Println("\r\nExtracting Utility Location Information from .config\r\n-------------")
 	var u utilities.Utils
@@ -156,10 +150,8 @@ func (h *cmdlineHandler) toolPaths() map[string]string {
 	return toolList
 }
 
-/*
- *	Reads a line in format	[substring1 = substring2]
- *	Returns [substring1, substring2]
- */
+// Reads a line in format	[substring1 = substring2]
+// Returns [substring1, substring2]
 func forl(line string) (string, string) {
 	var exp []string
 	exp = strings.Split(line, "=")
@@ -169,10 +161,8 @@ func forl(line string) (string, string) {
 	return exp[0], exp[1]
 }
 
-/*
- *	Iterates over a map of format.		map[tool] = location
- *	In case of error exits
- */
+// Iterates over a map of format.		map[tool] = location
+// In case of error exits
 func (h *cmdlineHandler) verifyTools(tList map[string]string) {
 	// We want to stat a file, and continue if it exists :
 

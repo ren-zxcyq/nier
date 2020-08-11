@@ -262,8 +262,8 @@ func (h *AppSpider) gobusterandrelURLs() []string {
 	return r
 }
 
-//	parseRelandGobusterURLs Filters out results that are of (Status: 403)
-//	Returns an array of lines.
+// parseRelandGobusterURLs Filters out results that are of (Status: 403)
+// Returns an array of lines.
 func (h *AppSpider) parseRelandGobusterURLs(cmdout string) []string {
 	
 	var extract []string

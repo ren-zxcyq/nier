@@ -151,10 +151,10 @@ func (a *Agent) WrappedGet(url string) string {
 		fmt.Println("Error encountered while requesting", url, e)
 	}
 
-	// //	r.Status contains the status
+	//	r.Status contains the status
 	fmt.Println("[+]\t\t",r.Status)
 
-	// //	Extract Body
+	//	Extract Body
 	body, e := ioutil.ReadAll(r.Body)
 	if e != nil {
 		fmt.Printf("%s", e)

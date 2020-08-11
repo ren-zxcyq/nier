@@ -311,7 +311,6 @@ func (h *InjectionHandler) removeelements() {
 			}
 
 			// get again?
-				
 		}
 	}
 }

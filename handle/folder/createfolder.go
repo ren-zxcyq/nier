@@ -18,10 +18,8 @@ func newFolderHandler(fName string) *outputFolderHandler {
 	return &h
 }
 
-/*
- *	Creates a folder if it does not exist. Caller is responsible for handling that case.
- *	p passed in here is actually the merged cwd & user supplied [-o] param.
- */
+// Creates a folder if it does not exist. Caller is responsible for handling that case.
+// p passed in here is actually the merged cwd & user supplied [-o] param.
 func (h *outputFolderHandler) makeFolder() bool {
 	var p string = h.folderName
 	if _, err := os.Stat(fmt.Sprintf(p)); os.IsNotExist(err) {	//n

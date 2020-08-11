@@ -1,9 +1,7 @@
+// Package handlepdf is responsible for creating a pdf file using gofpdf
+// -	"github.com/jung-kurt/gofpdf"
 package handlepdf
 
-/*
- *	Create a pdf file using gofpdf	-	"github.com/jung-kurt/gofpdf"
- *
- */
 
 import (
 	"fmt"
@@ -139,15 +137,13 @@ func (h *pdfHandler) pdfCreate() error {
 }
 */
 
-/*
- *	Creates a document -> Sets Header & Creates a table
- *			uses h.newReport() to do so
- */
+// Creates a document -> Sets Header & Creates a table
+// 			uses h.newReport() to do so
 func (h *pdfHandler) pdfCreate() error {
 
 	//	Create a new PDF doc & write title & current date
 	pdf := h.newReport()
-//FROM HERE
+	//FROM HERE
 	//	Filter Tool Output
 
 	//	Add Target Table
@@ -155,22 +151,22 @@ func (h *pdfHandler) pdfCreate() error {
 
 	//	Add Banner Table
 	pdf = h.nmapbannertable(pdf)
-
 	pdf = h.httprinttable(pdf)
-
 	pdf = h.httpmethodstable(pdf)
-
 	pdf = h.robotstxttable(pdf)
-
 
 	//	Add Tools Run Table
 	pdf = h.toolsTable(pdf)
 	pdf = h.nmapVulnsTable(pdf)
 	pdf = h.gobusterDirTable(pdf)
 	pdf = h.nmapComments_MAYBE_table(pdf)
-
+	// pdf = h.wpscantable(pdf)
 	pdf = h.niktotable(pdf)
-//TO HERE
+	// pdf = h.xsstriketable(pdf)
+	// pdf = h.reflectedoutputtable(pdf)
+
+
+	//TO HERE
 	if pdf.Err() {
 		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
 		return pdf.Error()
@@ -185,7 +181,7 @@ func (h *pdfHandler) pdfCreate() error {
 	return nil
 }
 
-//	This creates the Document template
+// This creates the Document template
 func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	//	New() creates
 
@@ -369,8 +365,7 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 }
 
 func (h *pdfHandler) savePDF(pdf *gofpdf.Fpdf) error {
-	// fmt.Println("BBBBBBBBBBBBBBB", h.filename)
-	return pdf.OutputFileAndClose(h.filename) //	HERE
+	return pdf.OutputFileAndClose(h.filename)
 }
 
 func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
@@ -393,7 +388,6 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	res := toolparser.ParseNmapSV(nmap)
 
-	// fmt.Println("@@@@@@@")
 	// fmt.Println(res)
 	////////////////////////////////////////////////////////////////////////////////////////
 	strCont, err := u.StringToLines(res)
@@ -462,7 +456,7 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
 	// pdf.Ln(-1)
-	//pdf.SetFont("Arial", "B", 16)
+	// pdf.SetFont("Arial", "B", 16)
 	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40, 12, "Commands Run")
 	pdf.Ln(-1)
@@ -498,11 +492,11 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	//	Pass	-1 ->	Ln()	i.e. use the height of the last printed Cell as the line height
 	pdf.Ln(-1)
-	//pdf = h.table(pdf, tableCont)
+	// pdf = h.table(pdf, tableCont)
 	pdf.SetFont(fontname, "", 10)
 	pdf.SetFillColor(255, 255, 255)
 
-	//	Allign columns according to their contents
+	// Allign columns according to their contents
 	align := []string{"L", "C", "L", "L", "R", "R"} //"No.","Tool"
 	for _, line := range tableCont {
 		for i, str := range line { //	i -> 0, 1,2,3
@@ -592,9 +586,8 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.F
 	return pdf
 }
 
-//	/root/Desktop/report/nmap-vuln.nmap
-//	nmap-vuln.nmap
-
+// /root/Desktop/report/nmap-vuln.nmap
+// nmap-vuln.nmap
 func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.Fpdf
 	pdf.AddPage()
 
@@ -805,7 +798,7 @@ func (h *pdfHandler) nmapbannertable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.Cell(40, 10, "Nmap: Banners Scan")
 	pdf.Ln(-1)
 
-	//	Filter output
+	// Filter output
 	var nmapBannersOutURL string = path.Join(h.foldername, "nmap-banners.nmap")
 	var bannersout string = u.ReturnFileContentsStr(nmapBannersOutURL)
 	res := toolparser.ParseBanners(bannersout)
@@ -904,7 +897,6 @@ func (h *pdfHandler) robotstxttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	pdf = h.examplemultiwraptable(pdf, res)
 
-
 	return pdf
 }
 
@@ -914,8 +906,14 @@ func (h *pdfHandler) whatwebtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 }
 
 func (h *pdfHandler) wpscantable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-	//	@TODO	tool output is a folder		Consider just using a str for this
+	// @TODO	tool output is a folder		Consider just using a str for this
 	// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
+	pdf.AddPage()
+
+	return nil
+}
+
+func (h *pdfHandler) xsstriketable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
 
 	return nil
@@ -929,29 +927,46 @@ func (h *pdfHandler) reflectedoutputtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return nil
 }
 
+func (h *pdfHandler) seleniumxxstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	pdf.AddPage()
+	//	Need to filter and output this:
+	// [*]     XSS - Detected at:      http://192.168.1.20:80/index.php        -
+    //     Form Location:  http://192.168.1.20:80/post-testimonial.php
+    //     Payload:        <script>alert("tSBMWRZrPHjtSY50");</script>
+    //     Form Contents:
+
+	// 		<form method="post">                        
+                                          
+	// 				<div class="form-group">
+	// 				<label class="control-label">Testimonial</label>
+	// 				<textarea class="form-control white_bg" name="testimonial" rows="4" required=""></textarea>
+	// 				</div>
+																	
+	// 				<div class="form-group">                        
+	// 				<button type="submit" name="submit" class="btn">Save  <span class="angle_arrow">
+	// 				<i class="fa fa-angle-right" aria-hidden="true"></i></span></button>                  
+	// 				</div>
+	// 			</form>
+	// 		-
+	return nil
+}
+
 func (h *pdfHandler) todo() {
-	//	httprint -h 192.168.1.20 -P0 -s /usr/share/httprint/signatures.txt -o OUTPUTFILE
-	//	whatweb -v -a4 192.168.1.20 --log-verbose OUTPUTFILE
-	//	whatweb -v -a3 192.168.1.20:80 -u=usern@mail.com:password --log-verbose OUTPUTFILE
-
-	//	nmap -p 80 --script http-methods 192.168.1.20
-	//				http-headers
-	//				http-methods
-	//				http-apache-negotiation
-	//				http-date
-
-	//	wpscan --url 192.168.1.20				//	--wp-content-dir, --scope option, --url value given is the correct one
-
-	//	python Blindelephant.py http://192.168.1.20:80 guess
-
-	//	nmap -p80 --script=http-comments-displayer 192.168.1.20 -oN OUTPUTFILE
-
-	//	turbolist3r
-	//	arachni
-
-	//	nikto -h TARGET:80 -Tuning x 6 -o OUTPUTFILE -Format txt
-	//				-id user@email.com:password
-
+	// httprint -h 192.168.1.20 -P0 -s /usr/share/httprint/signatures.txt -o OUTPUTFILE
+	// whatweb -v -a4 192.168.1.20 --log-verbose OUTPUTFILE
+	// whatweb -v -a3 192.168.1.20:80 -u=usern@mail.com:password --log-verbose OUTPUTFILE
+ 	// nmap -p 80 --script http-methods 192.168.1.20
+	// 			http-headers
+	// 			http-methods
+	// 			http-apache-negotiation
+	// 			http-date
+ 	// wpscan --url 192.168.1.20				//	--wp-content-dir, --scope option, --url value given is the correct one
+ 	// python Blindelephant.py http://192.168.1.20:80 guess
+ 	// nmap -p80 --script=http-comments-displayer 192.168.1.20 -oN OUTPUTFILE
+ 	// turbolist3r
+	// arachni
+ 	// nikto -h TARGET:80 -Tuning x 6 -o OUTPUTFILE -Format txt
+	// 			-id user@email.com:password
 }
 
 func (h *pdfHandler) examplemultiwraptable(pdf *gofpdf.Fpdf, tbl []string) *gofpdf.Fpdf {

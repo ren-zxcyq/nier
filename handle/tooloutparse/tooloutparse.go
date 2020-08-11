@@ -1,9 +1,7 @@
+// Package tooloutparse receives string objects from handleexec package.
+// Extracts features and ?-> Act?
 package tooloutparse
 
-/*
- *	Receive string objects from handleexec package. Extract features ?-> Act?
- *
- */
 
 import (
 	"fmt"
@@ -109,8 +107,8 @@ func (h *Toolparser) ParseNikto(cmdout string) []string {
 	return extract
 }
 
-//	ParseGobuster Filters out results that are of (Status: 403)
-//	Returns an array of lines.
+// ParseGobuster Filters out results that are of (Status: 403)
+// Returns an array of lines.
 func (h *Toolparser) ParseGobuster(cmdout string) []string {
 	
 	var extract []string

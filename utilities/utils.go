@@ -150,17 +150,14 @@ func (h *Utils) Uniquestrslice(strSlice []string) []string {
     return list
 }
 
-/*
- *	encodes t -> base64 & url encoding
- *	uses:
- *			net/url
- *			encoding/base64
- *	in:
- *		encodeParams()
- *		encodeStringBase64()
- *
- *	usage:	utilities.EncodingTest()
- */
+// encodes t -> base64 & url encoding
+// uses:
+// 		net/url
+// 		encoding/base64
+// in:
+// 	encodeParams()
+// 	encodeStringBase64()
+// usage:	utilities.EncodingTest()
 func (h *Utils) EncodingTest() {
 	fmt.Println("\r\nEncoding Test Starting:\r\n-------------")
 	t := "enc*de Me Plea$e"
@@ -179,9 +176,7 @@ func (h *Utils) encodeStringBase64(s string) string {
 	return base64.StdEncoding.EncodeToString([]byte(s))
 }
 
-/*
- *	Return a Random String using - github.com/uniuri (cryptographically secure string)
- */
+// Return a Random String using - github.com/uniuri (cryptographically secure string)
 func (h *Utils) UniqueString() string {
 	//	Default uniuri.StdChars contains only alphanum
 	uniuri.StdChars = []byte("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+=-`~,<.>/?;:'\"")

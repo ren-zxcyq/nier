@@ -34,11 +34,9 @@ type elementsHandler struct {
 	tools                map[string]string
 }
 
-//
-// NewExecHandler defines a new execHandler struct.
+// Function NewExecHandler defines a new execHandler struct.
 // execHandler.Exec() runs all the tools.
 // execHandler is attached with all the internal unexported functions.
-//
 func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string) *execHandler {
 
 	//	Create an elementsHandler Object to be passed to the exported execHandler
@@ -61,10 +59,8 @@ func NewExecHandler(installationDir, configPath, os, targetH string, targetP int
 	return &h
 }
 
-/*
- *	Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
- *	@TODO	-	go doc os/exec.Cmd
- */
+// Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
+// @TODO	-	go doc os/exec.Cmd
 func (h *execHandler) execCmd(cmd string) string {
 	h.state = true
 	var s []string = strings.Split(cmd, " ")
@@ -81,10 +77,8 @@ func (h *execHandler) execCmd(cmd string) string {
 	return res
 }
 
-/*
- *	Executes Subprocess interactively - Separates StdOut & StdErr in separate files - Just in case
- *	@TODO	-	verify for sqlmap-shell
- */
+// Executes Subprocess interactively - Separates StdOut & StdErr in separate files - Just in case
+// @TODO	-	verify for sqlmap-shell
 func (h *execHandler) execInteractive(cmd string) {
 
 	h.state = true
@@ -128,16 +122,13 @@ func (h *execHandler) execInteractive(cmd string) {
 	h.state = false
 }
 
-/*
- *	Need to make sure that -host contains http://
- *
- *	1) OPTIONS request
- *	2) Verify Each Method
- *
- *	Upgrade to HTTPS upon encountering HTTPS reply
- *
- */
- func (h *execHandler) checkHTTPMethods() {
+// Need to make sure that -host contains http://
+//
+// 1) OPTIONS request
+// 2) Verify Each Method
+//
+// Upgrade to HTTPS upon encountering HTTPS reply
+func (h *execHandler) checkHTTPMethods() {
 	//	NEEDS hCmd Assignments to happen before running.
 	// host := "http://192.168.1.20"
 	// port := 80
@@ -235,9 +226,7 @@ func (h *execHandler) getRobots() {
 	u.SaveStringToFile(h.e.outputFolder + "/getrobots.txt", r)
 }
 
-/*
- *	Uses methods:	execCmd & execInteractive	essentially main execution happens here
- */
+// Uses methods:	execCmd & execInteractive	essentially main execution happens here
 func (h *execHandler) Exec() {
 
 	toolparser := tooloutparse.NewToolparser()
@@ -253,6 +242,11 @@ func (h *execHandler) Exec() {
 		pcount = "c" //	If none of the 3 use the *nix variation
 	}
 
+	if pcount != "c" {
+		fmt.Println("[*] This tool is currently designed to run on a *nix host.")
+		os.Exit(1)
+	}
+
 	var u utilities.Utils
 
 	//	Ping
@@ -262,14 +256,17 @@ func (h *execHandler) Exec() {
 		fmt.Println("[*] Host Unreachable.")
 		os.Exit(1)
 	}
+	
 	h.runTools()
-	// // h.runTools()
+	// h.xsstrike()
+	// h.wpscan()
+
+
 	// if len(h.e.sessionTokens) > 0 {
 	// 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -c \"" + h.e.sessionTokens + "\" -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
 	// 	h.relativeUrlSpider()
 
 	// } else {
-
 }
 
 func (h *execHandler) injectionTest() {
@@ -304,6 +301,24 @@ func (h *execHandler) appspider() {
 	appspider.Organize()
 }
 
+// func xsstrike() runs xsstrike using the URL list built in injectiondection.go.InjFormCheck() & used during the XSS injection detection process.
+func (h *execHandler) xsstrike() {
+
+	//	Pops nano but needs to be tested.
+	// h.execInteractive(h.e.tools["python3"] + " " + h.e.tools["xsstrike"] + ` -u "http://192.168.1.20" --data "login=Login&email=hacklab@hacklab.com&password=hacklab" --headers`)
+	h.execInteractive(h.e.tools["python3"] + " " + h.e.tools["xsstrike"] + " -u " + h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort) + " --crawl -t 10 --seeds " + h.e.outputFolder + "/urls_used_during_detection.txt")//	/root/testurls.txt")
+	//	/opt/XSStrike/xsstrike.py
+}
+
+func (h *execHandler) wpscan() {
+	// @TODO	-	check if prefix can be enforced during cmdline config parsing
+	var httprefix string
+	if !strings.HasPrefix(h.e.targetHost, "http://") || !strings.HasPrefix(h.e.targetHost, "https://") {
+		httprefix = "http://"
+	}
+	h.execInteractive(h.e.tools["wpscan"] + " --no-update -e --url " + httprefix + h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort))
+}
+
 func (h *execHandler) runTools() {
 	// nmapOutFilesURL := path.Join(h.e.outputFolder, "nmap_1_sSV")
 	// fmt.Println(nmapOutFilesURL)
@@ -332,18 +347,19 @@ func (h *execHandler) runTools() {
 	//	Spider
 	//	Merge lists
 	h.injectionTest()
+	h.xsstrike()
 
 	//	Vulnerability Testing
 	h.execCmd(h.e.tools["nmap"] + " -Pn --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
 	//var niktoOutFile string = path.Join(h.e.outputFolder, "nikto.txt")
 	h.execCmd(h.e.tools["nikto"] + " -h " + h.e.targetHost + " -output " + filepath.ToSlash(path.Join(h.e.outputFolder, "nikto.txt")))
+	h.wpscan()
 	
 	/*
-
 	//	@Uncomment
 	// h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
 	*/
-	
+
 	/*	@PRV
 		//	Nmap
 		var nmapOutFilesURL string = path.Join(h.e.outputFolder, "nmap_1_sSV")
