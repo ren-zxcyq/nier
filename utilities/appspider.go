@@ -273,7 +273,7 @@ func (h *AppSpider) parseRelandGobusterURLs(cmdout string) []string {
 	}
 	for _,v := range strCont {
 
-		if strings.Contains(v,"log") {	//	Filter
+		if strings.Contains(v,"log") {	//	@FILTER
 			continue
 		} else {
 			// extract += string(v)

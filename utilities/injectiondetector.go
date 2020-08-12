@@ -43,6 +43,7 @@ type InjectionHandler struct {
 	sessiontokens	string
 	outputFolder	string
 	httpprefix		string
+	pTest			bool
 
 	debug			bool	//	@TODO	-	Consider using a similar flag to the other operations
 }
@@ -61,10 +62,10 @@ type extractedform struct {	//	@TODO	add src
 }
 
 //
-func NewInjectionHandler(target string, targetport int, outputFolder string, stokens string) *InjectionHandler {
+func NewInjectionHandler(target string, targetport int, outputFolder string, stokens string, ptest bool) *InjectionHandler {
 
 	//	Create InjectionHandler
-	var h InjectionHandler = InjectionHandler{target: target, targetport: targetport, sessiontokens: stokens, outputFolder: outputFolder, httpprefix: "http://"}
+	var h InjectionHandler = InjectionHandler{target: target, targetport: targetport, sessiontokens: stokens, outputFolder: outputFolder, httpprefix: "http://", pTest: ptest}
 
 	//fmt.Printf("Address of InjectionHandler - %p", &h) //	Prints the address of the Handler
 	return &h
@@ -106,7 +107,7 @@ func (h *InjectionHandler) InjFormCheck() {
 	for _,url := range urls {
 		// fmt.Println(url)
 		// os.Exit(1)
-		if !strings.Contains(url,"log") || !strings.Contains(url,"forgot") {	//	avoid logging out
+		if !strings.Contains(url,"log") || !strings.Contains(url,"pass") || !strings.Contains(url,"forgot") {	//	avoid logging out
 			// fmt.Println(url)
 			h.injRequestURLi(url)
 		} else {
@@ -523,9 +524,13 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 		return
 	}
 
-	//	@TODO	HERE	-	remove this
-	if !strings.Contains(form.contents, "testimonial") {
-		return
+	//	@TODO	-	remove return statement
+	// fmt.Println("TESTING ", h.pTest)
+	// os.Exit(1)
+	if h.pTest {
+		if !strings.Contains(form.contents, "testimonial") {
+			return
+		}
 	}
 
 	if h.debug {

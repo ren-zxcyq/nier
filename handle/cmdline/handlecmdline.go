@@ -24,6 +24,7 @@ type cmdlineHandler struct {
 	OutputFolder         string
 	SessionTokens        string
 	Tools                map[string]string //	Config File Contents:	map[tool] = location
+	Ptest				 bool	//	PoC scenario. i.e. Prioritize "testimonials".
 }
 
 func NewCmdlineHandler() *cmdlineHandler {
@@ -39,6 +40,7 @@ var targetPortPointer = flag.Int("p", 80, "Target Port")
 var subdomainEnumerationPointer = flag.Bool("s", false, "Enable Subdomain Enumeration") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
 var outputFolderPointer = flag.String("o", os.Getenv("HOME") + "/Desktop/Nier_Automaton_Report", "Output Folder PATH - in format: -o \"~/Desktop/report\"")
 var sessionTokensPointer = flag.String("sess", "", "Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2")
+var ptestPointer = flag.Bool("ptest", false, "PoC scenario. i.e. Prioritize \"testimonials\" during injection detection. Just append \"-ptest\" or \"--ptest\" to the commandline.")
 
 func (h *cmdlineHandler) PrintBanner() {
 	var banner string = "\r\n\t⣤⡄⠀⠀⣤⢠⢠⠀⠀⠀⠀⣤⠄⠀⢤⡀⠀⠀⠀⢀⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⢀⢀⣤⠀⠀⠀⠀⣒⣒"
@@ -106,6 +108,7 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	fmt.Println("subdomainEnumeration:", *subdomainEnumerationPointer)
 	fmt.Println("outputFolder:", *outputFolderPointer)
 	fmt.Println("sessionTokens:", *sessionTokensPointer)
+	fmt.Println("ptest:", *ptestPointer)
 
 	h.TargetHost = *targetHostPointer
 	h.TargetPort = *targetPortPointer
@@ -121,6 +124,13 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	
 
 	h.SessionTokens = *sessionTokensPointer
+
+	h.Ptest = *ptestPointer	//	h.isFlagPassed("ptestPointer")
+
+	// fmt.Println("TESTING ", h.Ptest)
+	// os.Exit(1)
+	
+	// if 
 	fmt.Println("-------------")
 
 	//	Print Contents of the Config File
@@ -183,4 +193,14 @@ func (h *cmdlineHandler) verifyTools(tList map[string]string) {
 		}
 	}
 	// fmt.Printf("Verified that the files exist.\r\n-------------\r\n\r\n")
+}
+
+func (h *cmdlineHandler) isFlagPassed(name string) bool {
+    found := false
+    flag.Visit(func(f *flag.Flag) {
+        if f.Name == name {
+            found = true
+        }
+    })
+    return found
 }

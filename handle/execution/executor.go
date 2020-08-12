@@ -32,12 +32,13 @@ type elementsHandler struct {
 	outputFolder         string
 	sessionTokens        string
 	tools                map[string]string
+	pTest				 bool
 }
 
 // Function NewExecHandler defines a new execHandler struct.
 // execHandler.Exec() runs all the tools.
 // execHandler is attached with all the internal unexported functions.
-func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string) *execHandler {
+func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string, ptest bool) *execHandler {
 
 	//	Create an elementsHandler Object to be passed to the exported execHandler
 	var l elementsHandler = elementsHandler{
@@ -50,6 +51,7 @@ func NewExecHandler(installationDir, configPath, os, targetH string, targetP int
 		outputFolder:         outFolder,
 		sessionTokens:        sesTokens,
 		tools:                tL,
+		pTest:				  ptest,
 	}
 
 	//	Create execHandler
@@ -280,7 +282,7 @@ func (h *execHandler) injectionTest() {
 		//	Filter for Unique Items
 	
 	//	Get all URLs
-	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens)
+	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens,h.e.pTest)
 	injectionhandler.InjFormCheck()
 }
 

@@ -22,6 +22,7 @@ type elementsHandler struct {
 	outputFolder         string
 	sessionTokens        string
 	tools                map[string]string
+	ptest				 bool
 }
 
 var hCmd elementsHandler
@@ -42,7 +43,7 @@ func generateFolder() {
 
 func runTools() {
 	fmt.Println("Initiating Exec\r\n-------------")
-	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools)
+	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools, hCmd.ptest)
 	ex.Exec()
 	fmt.Println("-------------")
 }
@@ -60,6 +61,7 @@ func main() {
 	hCmd.outputFolder = cCmd.OutputFolder
 	hCmd.sessionTokens = cCmd.SessionTokens
 	hCmd.tools = cCmd.Tools
+	hCmd.ptest = cCmd.Ptest
 
 	generateFolder()
 	//exec
