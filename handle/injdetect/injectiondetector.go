@@ -2,7 +2,7 @@
 // extracting <form> tags, filter for unique forms, submitting all of them
 // and identifying user controlled input which appears on the application pages.
 // interface their execution with parsing.
-package utilities
+package injdetect
 
 import (
 	"fmt"
@@ -23,15 +23,17 @@ import (
 	"strconv"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/ren-zxcyq/nier/utilities"
 )
 
 
-var u Utils
-var t Agent
+var u utilities.Utils
+var t utilities.Agent
 var target string
 var extforms []extractedform
 // var submitedforms []extractedform
 // var possibleinjections string
+var reflectionsstring string
 var xssdiscovered string
 var inj	map[string]string
 var flaggedforms []extractedform
@@ -43,7 +45,7 @@ type InjectionHandler struct {
 	sessiontokens	string
 	outputFolder	string
 	httpprefix		string
-	pTest			bool
+	test			bool
 
 	debug			bool	//	@TODO	-	Consider using a similar flag to the other operations
 }
@@ -62,10 +64,10 @@ type extractedform struct {	//	@TODO	add src
 }
 
 //
-func NewInjectionHandler(target string, targetport int, outputFolder string, stokens string, ptest bool) *InjectionHandler {
+func NewInjectionHandler(target string, targetport int, outputFolder string, stokens string, test bool) *InjectionHandler {
 
 	//	Create InjectionHandler
-	var h InjectionHandler = InjectionHandler{target: target, targetport: targetport, sessiontokens: stokens, outputFolder: outputFolder, httpprefix: "http://", pTest: ptest}
+	var h InjectionHandler = InjectionHandler{target: target, targetport: targetport, sessiontokens: stokens, outputFolder: outputFolder, httpprefix: "http://", test: test}
 
 	//fmt.Printf("Address of InjectionHandler - %p", &h) //	Prints the address of the Handler
 	return &h
@@ -133,6 +135,7 @@ func (h *InjectionHandler) InjFormCheck() {
 	} else {
 		fmt.Println("[*]== [Did not write file: form_injection_detection.txt]")
 	}
+	// os.Exit(0)
 	//	@TODO
 	// fmt.Println("\r\n[*]\tForms Identified as Origins of User Controlled Input\r\n")
 	// for _,j := range flaggedforms {
@@ -275,8 +278,20 @@ func (h *InjectionHandler) checkforuqstrings(urls []string) {
 	for m,_ := range reflected {
 		fmt.Println("\r\n-")
 		fmt.Println(m, "\t-\t", reflected[m])
+		reflectionsstring += "[*]\t" + m + "\tfound in:\r\n"
+		for _,ru := range reflected[m] {
+			reflectionsstring += ru + "\r\n"
+		}
 		fmt.Println("-")
 	}
+
+	if len(reflectionsstring) > 0 {
+		var rurlsandstringslocation string = h.outputFolder + "/reflected_strings_and_urls.txt"
+		fmt.Println("\r\n[*]\tWriting Reflected Strings and URLs in which they were discovered to file:\t" + rurlsandstringslocation + "\r\n")
+		u.SaveStringToFile(rurlsandstringslocation, reflectionsstring)
+	}
+
+	// os.Exit(1)
 
 	fmt.Println("[*]\tBegin Injection")
 
@@ -525,9 +540,9 @@ func (h *InjectionHandler) submitform(form *extractedform) {
 	}
 
 	//	@TODO	-	remove return statement
-	// fmt.Println("TESTING ", h.pTest)
+	// fmt.Println("TESTING ", h.test)
 	// os.Exit(1)
-	if h.pTest {
+	if h.test {
 		if !strings.Contains(form.contents, "testimonial") {
 			return
 		}

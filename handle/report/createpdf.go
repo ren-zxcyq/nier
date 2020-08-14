@@ -25,11 +25,20 @@ type pdfHandler struct {
 	installationDir string
 	filename        string
 	foldername      string
+
+	ucinputInjection	 bool
+	subdomainEnumeration bool
 }
 
-func newPdfHandler(installDir, foldername string) *pdfHandler {
+func newPdfHandler(installDir, foldername string, ucinputInjection, subdomainEnumeration bool) *pdfHandler {
 	// fmt.Println("newPDFHANDLER", foldername)
-	var h pdfHandler = pdfHandler{installationDir: installDir, foldername: foldername, filename: path.Join(foldername, "Nier_Automaton_Report.pdf")}
+	var h pdfHandler = pdfHandler{
+		installationDir: installDir,
+		foldername: foldername,
+		filename: path.Join(foldername, "Nier_Automaton_Report.pdf"),
+		ucinputInjection: ucinputInjection,
+		subdomainEnumeration: subdomainEnumeration,
+	}
 	//fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
 	//fmt.Println(foldername)
 	toolparser = tooloutparse.NewToolparser()
@@ -49,9 +58,9 @@ func (h *pdfHandler) exCreate() {
 	}
 }
 
-func CreatePdf(installDir, outputFolderName string) {
+func CreatePdf(installDir, outputFolderName string, ucinputInjection, subdomainEnumeration bool) {
 	// fmt.Println("outputfoldername is", outputFolderName)
-	pdfHandler := newPdfHandler(installDir, outputFolderName)
+	pdfHandler := newPdfHandler(installDir, outputFolderName, ucinputInjection, subdomainEnumeration)
 	// pdfHandler.exCreate()
 	err := pdfHandler.pdfCreate()
 	if err != nil {
@@ -147,7 +156,10 @@ func (h *pdfHandler) pdfCreate() error {
 	//	Filter Tool Output
 
 	//	Add Target Table
-	pdf = h.targetTable(pdf)
+	pdf = h.targettable(pdf)
+
+	//	Add Tools Run Table
+	pdf = h.toolstable(pdf)
 
 	//	Add Banner Table
 	pdf = h.nmapbannertable(pdf)
@@ -155,13 +167,25 @@ func (h *pdfHandler) pdfCreate() error {
 	pdf = h.httpmethodstable(pdf)
 	pdf = h.robotstxttable(pdf)
 
-	//	Add Tools Run Table
-	pdf = h.toolsTable(pdf)
-	pdf = h.nmapVulnsTable(pdf)
-	pdf = h.gobusterDirTable(pdf)
+	if h.subdomainEnumeration {
+		pdf = h.subdomainstable(pdf)
+	}
+	pdf = h.urlsdiscoveredtable(pdf)	//	maybe change this to add output after all 3 rel & appspider
 	pdf = h.nmapComments_MAYBE_table(pdf)
-	// pdf = h.wpscantable(pdf)
+	pdf = h.wpscantable(pdf)
+
+	if h.ucinputInjection {
+		// pdf = h.reflectedoutputtable(pdf)		//	Includes findings before any XSS checks take place
+		// pdf = h.injectiontesttable(pdf)	//	Includes xsstrike & seleniun checks
+		pdf = h.reflectedoutputtable(pdf)
+		pdf = h.xsstriketable(pdf)
+		pdf = h.seleniumxsstable(pdf)
+	}
+
+	pdf = h.nmapvulnstable(pdf)
 	pdf = h.niktotable(pdf)
+
+
 	// pdf = h.xsstriketable(pdf)
 	// pdf = h.reflectedoutputtable(pdf)
 
@@ -368,7 +392,7 @@ func (h *pdfHandler) savePDF(pdf *gofpdf.Fpdf) error {
 	return pdf.OutputFileAndClose(h.filename)
 }
 
-func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+func (h *pdfHandler) targettable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40, 10, "Target: Online")
 	pdf.Ln(-1)
@@ -388,9 +412,11 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	res := toolparser.ParseNmapSV(nmap)
 
+	var strCont []string
+	var tmp []string
 	// fmt.Println(res)
 	////////////////////////////////////////////////////////////////////////////////////////
-	strCont, err := u.StringToLines(res)
+	tmp, err := u.StringToLines(res)
 	if err != nil {
 		log.Println("Failed while separating lines in formatted tool output")
 	}
@@ -413,6 +439,11 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 		tableCont = tableCont[1:]
 	*/
 
+	for _,l := range tmp {
+		if len(l) > 0 {
+			strCont = append(strCont,l)
+		}
+	}
 	pdf = h.examplemultiwraptable(pdf, strCont)
 
 	/*
@@ -453,7 +484,7 @@ func (h *pdfHandler) targetTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	// pdf.CellFormat(190, 7, "Nier - Report", "0", 0, "CM", false, 0, "")
 }
 
-func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+func (h *pdfHandler) toolstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
 	// pdf.Ln(-1)
 	// pdf.SetFont("Arial", "B", 16)
@@ -519,7 +550,7 @@ func (h *pdfHandler) toolsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return pdf
 }
 
-func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.Fpdf
+func (h *pdfHandler) nmapvulnstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.Fpdf
 
 	//return pdf
 	var nmapOutFilesURL string = path.Join(h.foldername, "nmap-vuln.nmap")
@@ -588,7 +619,7 @@ func (h *pdfHandler) nmapVulnsTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.F
 
 // /root/Desktop/report/nmap-vuln.nmap
 // nmap-vuln.nmap
-func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.Fpdf
+func (h *pdfHandler) urlsdiscoveredtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.Fpdf
 	pdf.AddPage()
 
 	pdf.SetFont(fontname, "B", 14)
@@ -597,13 +628,13 @@ func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	//	Filter Gobuster output
-	var gobusterOutURL string = path.Join(h.foldername, "gobuster-URLs")
+	var detectedURLsURL string = path.Join(h.foldername, "spider_URLs.list")	//"urls_used_during_detection.txt")	//	they both have the same length
 	//gobusterOutURL = filepath.ToSlash(gobusterOutURL)
 	//gobusterOutURL = strings.Replace(gobusterOutURL, ":", "", -1)
 	// fmt.Println("||||||||||\r\n",gobusterOutURL)
-	var gobuster string = u.ReturnFileContentsStr(gobusterOutURL)
+	var detectedURLstring string = u.ReturnFileContentsStr(detectedURLsURL)
 	// res := gobuster	//toolparser.ParseNmapSV(gobuster)
-	res := toolparser.ParseGobuster(gobuster)
+	res := toolparser.ParseGobusterAndSpidersLinks(detectedURLstring)
 	// fmt.Println("******\r\n",gobuster)
 	// fmt.Println("******\r\n",res)
 
@@ -618,7 +649,7 @@ func (h *pdfHandler) gobusterDirTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf
 	return pdf
 }
 
-func (h *pdfHandler) sqlmapTable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+func (h *pdfHandler) sqlmaptable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	/*
 		available databases [2]:
 		[*] information_schema
@@ -902,6 +933,8 @@ func (h *pdfHandler) robotstxttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) whatwebtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
+	pdf.Cell(40, 10, "whatweb Table")
+	pdf.Ln(-1)
 	return nil
 }
 
@@ -909,26 +942,56 @@ func (h *pdfHandler) wpscantable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	// @TODO	tool output is a folder		Consider just using a str for this
 	// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
 	pdf.AddPage()
+	pdf.Cell(40, 10, "WPScan Table")
+	pdf.Ln(-1)
 
-	return nil
+	var wpscanoutURL string = path.Join(h.foldername, "/wpscan_out")
+	var wpscanoutstring string = u.ReturnFileContentsStr(wpscanoutURL)
+	res := toolparser.ParseWPScanner(wpscanoutstring)
+
+	pdf = h.examplemultiwraptable(pdf, res)
+
+	return pdf
 }
 
 func (h *pdfHandler) xsstriketable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-	pdf.AddPage()
 
-	return nil
+	var reflectedoutputURL string = path.Join(h.foldername, "/reflected_strings_and_urls.txt")
+	var reflectedoutputstring string = u.ReturnFileContentsStr(reflectedoutputURL)
+	res := toolparser.ParseXSStrikeOutput(reflectedoutputstring)
+
+	if len(res) > 0 {
+		pdf.AddPage()
+		pdf.Cell(40, 10, "XSStrike Table")
+		pdf.Ln(-1)	
+	}
+	return pdf
 }
 
 func (h *pdfHandler) reflectedoutputtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-		//	@TODO	tool output is a folder		Consider just using a str for this
-	// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
-	pdf.AddPage()
+					//	@TODO	tool output is a folder		Consider just using a str for this
+				// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
 
-	return nil
+	var reflectedoutputURL string = path.Join(h.foldername, "/reflected_strings_and_urls")
+	var reflectedoutputstring string = u.ReturnFileContentsStr(reflectedoutputURL)
+	res := toolparser.ParseReflectedOutput(reflectedoutputstring)
+
+	if len(res) > 0 {
+		pdf.AddPage()
+		pdf.Cell(40, 10, "User Controlled - Reflected Output Table")
+		pdf.Ln(-1)
+	
+		pdf = h.examplemultiwraptable(pdf, res)
+	}
+
+	return pdf
 }
 
-func (h *pdfHandler) seleniumxxstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+func (h *pdfHandler) seleniumxsstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
+	pdf.Cell(40, 10, "XSS - Selenium Testing Table")
+	pdf.Ln(-1)
+
 	//	Need to filter and output this:
 	// [*]     XSS - Detected at:      http://192.168.1.20:80/index.php        -
     //     Form Location:  http://192.168.1.20:80/post-testimonial.php
@@ -948,7 +1011,39 @@ func (h *pdfHandler) seleniumxxstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	// 				</div>
 	// 			</form>
 	// 		-
+
+	var seleniumTestingOutURL string = path.Join(h.foldername, "/form_injection_detection.txt")
+	var seleniumTestingOut string = u.ReturnFileContentsStr(seleniumTestingOutURL)
+	res := toolparser.ParseSeleniumXSS(seleniumTestingOut)
+
+	pdf = h.examplemultiwraptable(pdf, res)
+
+	return pdf
+}
+
+func (h *pdfHandler) injectiontesttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	pdf.AddPage()
+	pdf.Cell(40, 10, "Injection Testing Table")
+	pdf.Ln(-1)
+
 	return nil
+}
+
+func (h *pdfHandler) subdomainstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+
+	var gobusterSubdomainsOutURL string = path.Join(h.foldername, "/gobuster-Subdomains")
+	var gobusterSubdomainsOut string = u.ReturnFileContentsStr(gobusterSubdomainsOutURL)
+	res := toolparser.ParseGobusterSubdomains(gobusterSubdomainsOut)
+
+	if len(res) > 0 {
+		pdf.AddPage()
+		pdf.Cell(40, 10, "Subdomain Enumeration Output Table")
+		pdf.Ln(-1)
+	
+		pdf = h.examplemultiwraptable(pdf, res)
+	}
+
+	return pdf
 }
 
 func (h *pdfHandler) todo() {

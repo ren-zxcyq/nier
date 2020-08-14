@@ -18,21 +18,32 @@ type elementsHandler struct {
 	cOS                  string
 	targetHost           string
 	targetPort           int
+	runAll				 bool
+	ucinputinjection	 bool
 	subdomainEnumeration bool
 	outputFolder         string
 	sessionTokens        string
 	tools                map[string]string
-	ptest				 bool
+	test				 bool
 }
 
 var hCmd elementsHandler
 
-func generateReportFile() {
-	fmt.Println("Initiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
-	//handlepdf.CreateDoc(outputFolder)
-	// fmt.Println(hCmd.installationDir, hCmd.outputFolder)
-	handlepdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder)
-	// fmt.Println("-------------")
+func handleCmdline() {
+	cCmd := handlecmdline.NewCmdlineHandler()
+
+	hCmd.installationDir = cCmd.InstallationDir
+	hCmd.configFilePath = cCmd.ConfigFilePath
+	hCmd.cOS = cCmd.C_OS
+	hCmd.targetHost = cCmd.TargetHost
+	hCmd.targetPort = cCmd.TargetPort
+	hCmd.runAll = cCmd.RunAll
+	hCmd.ucinputinjection = cCmd.Ucinputinjection
+	hCmd.subdomainEnumeration = cCmd.SubdomainEnumeration
+	hCmd.outputFolder = cCmd.OutputFolder
+	hCmd.sessionTokens = cCmd.SessionTokens
+	hCmd.tools = cCmd.Tools
+	hCmd.test = cCmd.Test
 }
 
 func generateFolder() {
@@ -43,34 +54,31 @@ func generateFolder() {
 
 func runTools() {
 	fmt.Println("Initiating Exec\r\n-------------")
-	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools, hCmd.ptest)
+	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.runAll, hCmd.ucinputinjection, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools, hCmd.test)
 	ex.Exec()
 	fmt.Println("-------------")
 }
 
+func generateReportFile() {
+	fmt.Println("Initiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
+	//handlepdf.CreateDoc(outputFolder)
+	// fmt.Println(hCmd.installationDir, hCmd.outputFolder)
+	handlepdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder, hCmd.ucinputinjection, hCmd.subdomainEnumeration)
+	// fmt.Println("-------------")
+}
+
 func main() {
-	//	@Main
-	cCmd := handlecmdline.NewCmdlineHandler()
 
-	hCmd.installationDir = cCmd.InstallationDir
-	hCmd.configFilePath = cCmd.ConfigFilePath
-	hCmd.cOS = cCmd.C_OS
-	hCmd.targetHost = cCmd.TargetHost
-	hCmd.targetPort = cCmd.TargetPort
-	hCmd.subdomainEnumeration = cCmd.SubdomainEnumeration
-	hCmd.outputFolder = cCmd.OutputFolder
-	hCmd.sessionTokens = cCmd.SessionTokens
-	hCmd.tools = cCmd.Tools
-	hCmd.ptest = cCmd.Ptest
-
+	handleCmdline()
 	generateFolder()
 	//exec
 	runTools()
 	generateReportFile()
 
-	//testHttpMethods()
-	// testPdf()
 }
+
+//testHttpMethods()
+// testPdf()
 
 // /*
 //  *	Need to make sure that -host contains http://

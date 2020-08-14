@@ -26,7 +26,7 @@ If run as root:
 
 ## Usage
 ```
-~/go/src/github.com/ren-zxcyq/nier$ ~/go/bin/nier -h
+# ~/go/bin/nier -h
 
         ⣤⡄⠀⠀⣤⢠⢠⠀⠀⠀⠀⣤⠄⠀⢤⡀⠀⠀⠀⢀⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⢀⢀⣤⠀⠀⠀⠀⣒⣒
         ⡇⠙⢦⠀⣿⠀⡄⠀⣀⡀⠀⣿⠀⢀⡼⠃⢠⠀⠀⡘⢻⠀⣀⠀⢀⡀⣰⣀⠀⢀⣀⠀⠁⡀⠀⣀⠀⢨⣄⠠⠤⣤⠇⠿⣢⣀
@@ -34,14 +34,21 @@ If run as root:
         ⡇⠀⠀⠀⣿⠀⡇⣷⠊⠁⠀⣿⠀⠀⢹⡀⠐⠀⡘⠉⠀⡷⠸⠀⠀⡃⡈⣶⡎⢶⣴⠇⡇⣿⡇⢸⣿⠀⠋⣴⡇⢸⠀⣿⢘⡅⡇⡇⢸
         ⠓⠀⠀⠐⠛⠐⠓⠈⠓⠒⠃⠛⠂⠀⠘⠃⠀⠀⠃⠀⠀⠓⠂⠓⠂⠃⠃⠈⠚⠀⠉⠚⠁⠙⠀⠘⠛⠀⠂⠉⠘⠈⠃⠈⠓⠐⠃⠃⠘
 
-Usage of ~/go/bin/nier:
+Usage of /root/go/bin/nier:
+  -all
+        Execute every type of check. If present, flags [inj,subdomain] are enabled. If any of the flags [inj,subdomain] are submitted while flag --all is submitted, they are silently ignored.
   -host string
-        Identifies target host - i.e. 127.0.0.1 or www.myshop.com (default "127.0.0.1")
+        Identifies target host - i.e. 127.0.0.1 or www.myshop.com or http://myshop.com (default "127.0.0.1")
+  -inj
+        Enable User Controlled Input Injection checking.
   -o string
-        Output Folder PATH - in format: -o "~/Desktop/report" (default "~/Desktop/Nier_Automaton_Report")
+        Output Folder PATH - in format: -o "~/Desktop/report" (default "/root/Desktop/Nier_Automaton_Report")
   -p int
         Target Port (default 80)
-  -s    Enable Subdomain Enumeration
   -sess string
         Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2
+  -subdomain
+        Enable Subdomain Enumeration.
+  -test
+        PoC scenario. i.e. Prioritize "testimonials" during injection detection. Just append "-test" or "--test" to the commandline.
 ```

@@ -14,6 +14,8 @@ import (
 	"strings"
 
 	"github.com/ren-zxcyq/nier/handle/tooloutparse"
+	"github.com/ren-zxcyq/nier/handle/injdetect"
+	"github.com/ren-zxcyq/nier/handle/spider"
 	"github.com/ren-zxcyq/nier/utilities"
 )
 
@@ -28,17 +30,21 @@ type elementsHandler struct {
 	cOS                  string
 	targetHost           string
 	targetPort           int
+	runAll				 bool
+	ucinputInjection	 bool
 	subdomainEnumeration bool
 	outputFolder         string
 	sessionTokens        string
 	tools                map[string]string
-	pTest				 bool
+	test				 bool
 }
+
+var u utilities.Utils
 
 // Function NewExecHandler defines a new execHandler struct.
 // execHandler.Exec() runs all the tools.
 // execHandler is attached with all the internal unexported functions.
-func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string, ptest bool) *execHandler {
+func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, runAll, ucinputInjection, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string, test bool) *execHandler {
 
 	//	Create an elementsHandler Object to be passed to the exported execHandler
 	var l elementsHandler = elementsHandler{
@@ -47,22 +53,24 @@ func NewExecHandler(installationDir, configPath, os, targetH string, targetP int
 		cOS:                  os,
 		targetHost:           targetH,
 		targetPort:           targetP,
+		runAll:				  runAll,
+		ucinputInjection:	  ucinputInjection,
 		subdomainEnumeration: subdomainEnum,
 		outputFolder:         outFolder,
 		sessionTokens:        sesTokens,
 		tools:                tL,
-		pTest:				  ptest,
+		test:				  test,
 	}
 
 	//	Create execHandler
 	var h execHandler = execHandler{state: false, e: l}
-
+	// u = utilities.Utils
 	//fmt.Printf("Address of execHandler - %p", &h) //	Prints the address of outputFolderHandler
 	return &h
 }
 
-// Opens another program in go (os/exec etc): https://stackoverflow.com/a/37123000
-// @TODO	-	go doc os/exec.Cmd
+// Opens another program in go (os/exec etc):					https://stackoverflow.com/a/37123000
+// go doc os/exec.Cmd
 func (h *execHandler) execCmd(cmd string) string {
 	h.state = true
 	var s []string = strings.Split(cmd, " ")
@@ -73,23 +81,22 @@ func (h *execHandler) execCmd(cmd string) string {
 		log.Println(err.Error())
 	}
 
-	var res string = fmt.Sprintf("\r\n%s output is: \r\n-------------\r\n%s\r\n%s\n\n", cmd, out, err) //fmt.Sprintf() questionable
+	var res string = fmt.Sprintf("\r\n%s output is: \r\n-------------\r\n%s\r\n%s\n\n", cmd, out, err)
 
 	h.state = false
 	return res
 }
 
 // Executes Subprocess interactively - Separates StdOut & StdErr in separate files - Just in case
-// @TODO	-	verify for sqlmap-shell
 func (h *execHandler) execInteractive(cmd string) {
 
 	h.state = true
 	var s []string = strings.Split(cmd, " ")
 
-	var res string = fmt.Sprintf("\n%s output is: \n-------------\n", s[0]) //fmt.Sprintf() questionable
+	var res string = fmt.Sprintf("\n%s output is: \n-------------\n", s[0])
 	fmt.Print(res)
 
-	//!was NOT commented OUT
+
 	//f, err := os.OpenFile(outputFolder + "/" + s[0] + ".out", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	//fmt.Println("Creating FILE")
 	var e []string = strings.Split(s[0], "/")
@@ -110,7 +117,7 @@ func (h *execHandler) execInteractive(cmd string) {
 
 	subprocess.Stdin = os.Stdin
 
-	//!was NOT commented out
+
 	// redirect output to files
 	//subprocess.Stdout = f
 	//subprocess.Stderr = f
@@ -206,7 +213,7 @@ func (h *execHandler) checkHTTPMethods() {
 	// fmt.Println("-------------")
 
 	//	Save to File
-	var u utilities.Utils
+	// var u utilities.Utils
 	u.SaveStringToFile(h.e.outputFolder + "/httptesting.txt", results)
 
 	// os.Exit(0)
@@ -224,7 +231,7 @@ func (h *execHandler) getRobots() {
 		r += tsec.Robots(h.e.targetHost)
 	}
 	// fmt.Println(r)
-	var u utilities.Utils
+	// var u utilities.Utils
 	u.SaveStringToFile(h.e.outputFolder + "/getrobots.txt", r)
 }
 
@@ -249,7 +256,7 @@ func (h *execHandler) Exec() {
 		os.Exit(1)
 	}
 
-	var u utilities.Utils
+	// var u utilities.Utils
 
 	//	Ping
 	var ping string = h.execCmd(h.e.tools["ping"] + " -" + pcount + " 1 " + u.Trimurlprefixhttp(h.e.targetHost))
@@ -282,12 +289,12 @@ func (h *execHandler) injectionTest() {
 		//	Filter for Unique Items
 	
 	//	Get all URLs
-	var injectionhandler *utilities.InjectionHandler = utilities.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens,h.e.pTest)
+	var injectionhandler *injdetect.InjectionHandler = injdetect.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens,h.e.test)
 	injectionhandler.InjFormCheck()
 }
 
 func (h *execHandler) relativeUrlSpider() {
-	var relurlspider *utilities.RelativeLinkSpider = utilities.NewRelativeLinkSpider(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens)
+	var relurlspider *spider.RelativeLinkSpider = spider.NewRelativeLinkSpider(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens)
 	// var results string = 
 	relurlspider.ReqURLs()
 	// u.SaveStringToFile(h.e.outputFolder + "/links_gobuster_and_relspider.txt", results)
@@ -295,10 +302,11 @@ func (h *execHandler) relativeUrlSpider() {
 }
 
 func (h *execHandler) appspider() {
-	var appspider *utilities.AppSpider = utilities.NewAppSpider(h.e.targetHost, h.e.targetPort, h.e.outputFolder)
+	var appspider *spider.AppSpider = spider.NewAppSpider(h.e.targetHost, h.e.targetPort, h.e.outputFolder)
 	appspider.Prepare()
 	fmt.Println("\r\n\r\n[*]\tSpider Launched towards the Application\r\n")
 	h.execInteractive(h.e.tools["gospider"] + " -S " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")) + " --depth 2 --no-redirect -t 50 -c 3 --cookie \"" + h.e.sessionTokens + "\" --blacklist \"log\"")
+	// also consider: -a, --other-source (i.e. find URLs from 3d party (Archive.org, CommonCrawl.org, VirusTotal.com))
 	// h.execInteractive(h.e.tools["gospider"] + " -S " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")) + " --depth 0 --no-redirect -t 50 -c 3 --cookie \"" + h.e.sessionTokens + "\" --blacklist -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/prespiderlinks.txt")))
 	appspider.Organize()
 }
@@ -336,20 +344,29 @@ func (h *execHandler) runTools() {
 	//	Application Comments
 	h.getRobots()
 	h.execCmd(h.e.tools["nmap"] + " -Pn -p" + strconv.Itoa(h.e.targetPort) + " --script=http-comments-displayer -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-comments")) + " " + h.e.targetHost)
-	//	@Uncomment
+
+	if h.e.subdomainEnumeration {
+		h.execInteractive(h.e.tools["gobuster"] + " dns -d " + u.Trimurlprefixhttp(h.e.targetHost) + " -w /usr/share/amass/wordlists/subdomains-top1mil-5000.txt -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-Subdomains")))
+	}
+
+	// Rel & App Spiders need to run after gobuster directory discovery has been run. Otherwise execution fails.
+	// rel spider reads file OUTPUTFOLDER/gobuster-URLs -> generates another file
+	// which is read by appspider -> generating OUTPUTFOLDER/gospider_out
+	// and additional filtered and extracted elements [forms, URLs, subdomains etc.] under OUTPUTFOLDER/gospider_URLs.list etc.
 	h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
 	// h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/dirbuster/wordlists/directory-list-2.3-medium.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ filepath.ToSlash(path.Join(h.e.outputFolder, "gobuster-URLs")) + " -u=" + h.e.targetHost)
-
-	//h.execInteractive(h.e.tools["gobuster"] + " dir -w /usr/share/wordlists/dirb/common.txt -l -t 50 -x .php,.html,.ini,.py,.java,.sh,.js,.git -o "+ "/root/Desktop/report/gobuster-URLs" + " -u=" + h.e.targetHost)
 	h.relativeUrlSpider()
-
 	h.appspider()
+
 	//	hrefs
 	//	Merge lists
 	//	Spider
 	//	Merge lists
-	h.injectionTest()
-	h.xsstrike()
+
+	if h.e.ucinputInjection {
+		h.injectionTest()
+		h.xsstrike()
+	}
 
 	//	Vulnerability Testing
 	h.execCmd(h.e.tools["nmap"] + " -Pn --script=vuln -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-vuln")) + " " + h.e.targetHost)
@@ -359,7 +376,9 @@ func (h *execHandler) runTools() {
 	
 	/*
 	//	@Uncomment
-	// h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + "/index.php --forms --tamper=randomcase,space2comment --all")
+	// h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + " --forms --tamper=randomcase,space2comment --all")
+	//	@TEST
+	// h.execInteractive(h.e.tools["sqlmap"] + " -u " + h.e.targetHost + " --forms --tamper=randomcase,space2comment --os-shell")
 	*/
 
 	/*	@PRV

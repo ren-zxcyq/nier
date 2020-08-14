@@ -1,4 +1,4 @@
-package utilities
+package injdetect
 
 import (
 	// "os"
@@ -270,7 +270,7 @@ func (h *InjectionHandler) removeelements() {
 				lrv := len(rv)
 				if !(lrv == 0) {
 
-					fmt.Println("IS IS NOT ZERO")
+					fmt.Println("Len(rv) IS NOT ZERO")
 
 					// for _,rsv := range rv {
 					// 	fmt.Println("---",rsv)
@@ -281,9 +281,9 @@ func (h *InjectionHandler) removeelements() {
 					status := strings.TrimSpace(rv[lrv-2])
 					// fmt.Println("status of row:", status)
 					if status == "Inactive" {
-						fmt.Println("====It's not")
+						fmt.Println("====Testimonial Status is Inactive")
 					} else if status == "Active" {
-						fmt.Println("====IT IS")
+						fmt.Println("====Testimonial Status is Active")
 
 
 						//	Deactivate row request						"http://192.168.1.20/admin/testimonials.php"		127.0.0.1:9988
@@ -306,7 +306,7 @@ func (h *InjectionHandler) removeelements() {
 						fmt.Println(reqdeactivate_testimonials.Status,"\t-\t",len(bodydeactivate_testimonials))
 					}
 				} else {
-					fmt.Println("IT IS ZERO")
+					fmt.Println("Len(rv) IS ZERO")
 				}
 			}
 

@@ -131,17 +131,23 @@ func (h *Toolparser) ParseGobuster(cmdout string) []string {
 
 func (h *Toolparser) ParseBanners(cmdout string) []string {
 	var extract []string
+	var tmp []string
 	var cmdoutlist []string
 
 	cmdoutlist = strings.SplitN(cmdout, "conn-refused", 2)
 	cmdoutlist = strings.SplitN(cmdoutlist[1], "Service Info:", 2)
 
-	extract, err := u.StringToLines(cmdoutlist[0])
+	tmp, err := u.StringToLines(cmdoutlist[0])
 
 	if err != nil {
 		log.Println("Failed while separating lines in formatted tool output")
 	}
 
+	for _,l := range tmp {
+		if len(l) > 0 && (len(strings.TrimSpace(l)) > 0) {
+			extract = append(extract,l)
+		}
+	}
 	return extract
 }
 
@@ -258,7 +264,9 @@ func (h *Toolparser) ParseHTTPrint(cmdout string) []string {
 		}
 
 		// fmt.Println("third", line)
-		extract = append(extract, line)
+		if len(line) > 0 {
+			extract = append(extract, line)
+		}
 		// val = tmplist[1] + " " + tmplist[3] + " " + tmplist[5]
 		// fmt.Println(val)
 		// extract = append(extract, val)
@@ -311,8 +319,159 @@ func (h *Toolparser) ParseRobots(cmdout string) []string {
 	}
 
 	for _,val := range strCont {
-		extract = append(extract, val)
+		if len(val) > 0 {
+			extract = append(extract, val)
+		}
 	}
 	
+	return extract
+}
+
+// ParseGobuster Filters out results that are of (Status: 403)
+// Returns an array of lines.
+func (h *Toolparser) ParseGobusterAndSpidersLinks(cmdout string) []string {
+	
+	var extract []string
+	// extract = u.StringToLines(cmdout)
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	for _,v := range strCont {
+		if len(v) > 0 {
+			extract = append(extract,string(v))
+		}
+	}
+	return extract
+}
+
+func (h *Toolparser) ParseGobusterSubdomains(cmdout string) []string {
+
+	// Found: chrome.google.com
+	// Found: ns1.google.com
+	// Found: admin.google.com
+	// Found: www.google.com
+	// Found: m.google.com
+	// Found: support.google.com
+
+	var extract []string
+	// extract = u.StringToLines(cmdout)
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	for _,v := range strCont {	//	k
+		// fmt.Println(k,"-",v)
+		if !strings.Contains(v,"Found:") {
+			continue
+		} else {
+			// extract += string(v)
+			var tmp []string = strings.SplitN(v,"Found:",2)
+			var r string = tmp[1]
+			extract = append(extract,strings.TrimSpace(r))
+		}
+	}
+	return extract
+}
+
+func (h *Toolparser) ParseWPScanner(cmdout string) []string {
+	
+	var extract []string
+
+
+	var tmp []string = strings.SplitN(cmdout,"_______________________________________________________________",3)
+	
+	for _,i := range tmp {
+		fmt.Println("TMP ",i)
+	}
+	cmdout = tmp[2]
+	// cmdout
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	for _,v := range strCont {
+		if len(v) > 0 {
+			extract = append(extract, string(v))
+		}
+	}
+
+	return extract
+}
+
+func (h *Toolparser) ParseSeleniumXSS(cmdout string) []string {
+	
+	var extract []string
+
+	var numberOfAlertsDetected int = strings.Count(cmdout,"[*]")
+	
+	if numberOfAlertsDetected > 0 {
+
+		extract = append(extract, "Active alert pop-ups contaning the injected strings were detected")
+		var tmp []string = strings.SplitN(cmdout,"[*]",numberOfAlertsDetected+1)
+		
+		// var tmp []string
+		for i,j := range tmp {
+			fmt.Println("TMP",i,"-",j)
+			if len(j) > 0 {
+				var tmps []string
+				// extract = append(extract, j)
+
+				// cmdout
+				tmps, err := u.StringToLines(j)
+				if err != nil {
+					log.Println("Failed while separating lines in formatted tool output")
+				}
+				for _,l := range tmps {
+					if len(l) > 0 && (len(strings.TrimSpace(l)) > 0) {
+						extract = append(extract, l)
+					}
+				}
+				// extract = append(extract,"\r\n")
+			}
+		}
+		
+		// for _,v := range strCont {
+		// 	extract = append(extract, string(v))
+		// }
+	} else {
+		extract = append(extract, "No Active alert pop-ups containing the injected strings were detected.")
+	}
+	return extract
+}
+
+func (h *Toolparser) ParseReflectedOutput(cmdout string) []string {
+
+	var extract []string
+
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	for _,v := range strCont {
+		if strings.HasPrefix(v,"[*]") {
+			var tmp []string = strings.SplitN(v,"[*]",2)
+			var tmps string = strings.TrimSpace(tmp[1])
+			extract = append(extract,tmps)
+		} else {
+			extract = append(extract,string(v))
+		}
+	}
+	return extract
+}
+
+func (h *Toolparser) ParseXSStrikeOutput(cmdout string) []string {
+
+	var extract []string
+
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	for _,v := range strCont {
+		if strings.HasPrefix(v,"[+]") || strings.HasPrefix(v,"[++]") || strings.HasPrefix(v,"[!]") {
+			extract = append(extract,v)
+		}
+	}
 	return extract
 }

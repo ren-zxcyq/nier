@@ -1,13 +1,17 @@
 // Package spider is responsible for scraping the page
-package utilities
+package spider
 
 import (
 	"fmt"
 	"strings"
 	"strconv"
+
+	"github.com/ren-zxcyq/nier/utilities"
 )
 
 var prespiderlinks string
+
+var u utilities.Utils
 
 // var crawledlinks string				//	contains both Gobuster_URLs && rel_URLs
 
@@ -98,7 +102,7 @@ func (h *AppSpider) Organize() {
 		} else if strings.HasPrefix(line,"[subdomain]") {
 			subdomain_URLs = append(subdomain_URLs,line)
 		} else {
-			fmt.Println("[ignored]\t", line)
+			fmt.Println("\t[ignored]\t", line)
 		}
 	}
 

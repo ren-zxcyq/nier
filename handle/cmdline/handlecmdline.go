@@ -20,11 +20,13 @@ type cmdlineHandler struct {
 	C_OS                 string
 	TargetHost           string
 	TargetPort           int
+	RunAll				 bool
+	Ucinputinjection	 bool
 	SubdomainEnumeration bool
 	OutputFolder         string
 	SessionTokens        string
 	Tools                map[string]string //	Config File Contents:	map[tool] = location
-	Ptest				 bool	//	PoC scenario. i.e. Prioritize "testimonials".
+	Test				 bool	//	PoC scenario. i.e. Prioritize "testimonials".
 }
 
 func NewCmdlineHandler() *cmdlineHandler {
@@ -35,12 +37,14 @@ func NewCmdlineHandler() *cmdlineHandler {
 	return &h
 }
 
+var runallPointer = flag.Bool("all",false, "Execute every type of check. If present, flags [inj,subdomain] are enabled. If any of the flags [inj,subdomain] are submitted while flag --all is submitted, they are silently ignored.")
 var targetHostPointer = flag.String("host", "127.0.0.1", "Identifies target host - i.e. 127.0.0.1 or www.myshop.com or http://myshop.com")
 var targetPortPointer = flag.Int("p", 80, "Target Port")
-var subdomainEnumerationPointer = flag.Bool("s", false, "Enable Subdomain Enumeration") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
+var ucinputinjectionPointer = flag.Bool("inj",false, "Enable User Controlled Input Injection checking.")
+var subdomainEnumerationPointer = flag.Bool("subdomain", false, "Enable Subdomain Enumeration.") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
 var outputFolderPointer = flag.String("o", os.Getenv("HOME") + "/Desktop/Nier_Automaton_Report", "Output Folder PATH - in format: -o \"~/Desktop/report\"")
 var sessionTokensPointer = flag.String("sess", "", "Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2")
-var ptestPointer = flag.Bool("ptest", false, "PoC scenario. i.e. Prioritize \"testimonials\" during injection detection. Just append \"-ptest\" or \"--ptest\" to the commandline.")
+var testPointer = flag.Bool("test", false, "PoC scenario. i.e. Prioritize \"testimonials\" during injection detection. Just append \"-test\" or \"--test\" to the commandline.")
 
 func (h *cmdlineHandler) PrintBanner() {
 	var banner string = "\r\n\t⣤⡄⠀⠀⣤⢠⢠⠀⠀⠀⠀⣤⠄⠀⢤⡀⠀⠀⠀⢀⣤⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡀⠀⠀⢀⢀⣤⠀⠀⠀⠀⣒⣒"
@@ -98,21 +102,19 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	//	Parse args	-	They return pointers
 	flag.Parse() //	execute cmd-line parsing
 
-	//	Show args
-	fmt.Println("\r\nSelected:", "\r\n-------------")
-	fmt.Println("Installation Dir:", h.InstallationDir)
-	fmt.Println("Loading Config:", h.ConfigFilePath)
-	fmt.Println("Current OS:", h.C_OS)
-	fmt.Println("targethost:", *targetHostPointer)
-	fmt.Println("targetport:", *targetPortPointer)
-	fmt.Println("subdomainEnumeration:", *subdomainEnumerationPointer)
-	fmt.Println("outputFolder:", *outputFolderPointer)
-	fmt.Println("sessionTokens:", *sessionTokensPointer)
-	fmt.Println("ptest:", *ptestPointer)
-
 	h.TargetHost = *targetHostPointer
 	h.TargetPort = *targetPortPointer
-	h.SubdomainEnumeration = *subdomainEnumerationPointer
+	h.RunAll = *runallPointer
+	if *runallPointer == true {
+		h.RunAll = true
+		h.Ucinputinjection = true
+		h.SubdomainEnumeration = true
+	} else {
+		h.RunAll = *runallPointer
+		h.Ucinputinjection = *ucinputinjectionPointer
+		h.SubdomainEnumeration = *subdomainEnumerationPointer
+	}
+
 	//h.OutputFolder = *outputFolderPointer
 	// h.OutputFolder = path.Join(cwd, h.OutputFolder)
 
@@ -125,12 +127,27 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 
 	h.SessionTokens = *sessionTokensPointer
 
-	h.Ptest = *ptestPointer	//	h.isFlagPassed("ptestPointer")
+	h.Test = *testPointer	//	h.isFlagPassed("testPointer")
 
-	// fmt.Println("TESTING ", h.Ptest)
+	// fmt.Println("TESTING ", h.Test)
 	// os.Exit(1)
 	
-	// if 
+	//	Show args
+	fmt.Println("\r\nSelected:", "\r\n-------------")
+	fmt.Println("Installation Dir:", h.InstallationDir)
+	fmt.Println("Loading Config:", h.ConfigFilePath)
+	fmt.Println("Current OS:", h.C_OS)
+	fmt.Println("Target Host:", *targetHostPointer)
+	fmt.Println("Target Port:", *targetPortPointer)
+	fmt.Println("Perform All Checks:", *runallPointer)
+	fmt.Println("User Controlled Input Injection:", *ucinputinjectionPointer)
+	fmt.Println("Subdomain Enumeration:", *subdomainEnumerationPointer)
+	fmt.Println("Output Folder:", *outputFolderPointer)
+	fmt.Println("Session Tokens:", *sessionTokensPointer)
+	fmt.Println("Test:", *testPointer)
+
+
+
 	fmt.Println("-------------")
 
 	//	Print Contents of the Config File
@@ -195,12 +212,12 @@ func (h *cmdlineHandler) verifyTools(tList map[string]string) {
 	// fmt.Printf("Verified that the files exist.\r\n-------------\r\n\r\n")
 }
 
-func (h *cmdlineHandler) isFlagPassed(name string) bool {
-    found := false
-    flag.Visit(func(f *flag.Flag) {
-        if f.Name == name {
-            found = true
-        }
-    })
-    return found
-}
+// func (h *cmdlineHandler) isFlagPassed(name string) bool {
+//     found := false
+//     flag.Visit(func(f *flag.Flag) {
+//         if f.Name == name {
+//             found = true
+//         }
+//     })
+//     return found
+// }
