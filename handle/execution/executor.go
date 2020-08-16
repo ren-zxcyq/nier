@@ -16,6 +16,7 @@ import (
 	"github.com/ren-zxcyq/nier/handle/tooloutparse"
 	"github.com/ren-zxcyq/nier/handle/injdetect"
 	"github.com/ren-zxcyq/nier/handle/spider"
+	"github.com/ren-zxcyq/nier/handle/cveretrieval"
 	"github.com/ren-zxcyq/nier/utilities"
 )
 
@@ -34,6 +35,7 @@ type elementsHandler struct {
 	ucinputInjection	 bool
 	subdomainEnumeration bool
 	outputFolder         string
+	cveRetrieval		 bool
 	sessionTokens        string
 	tools                map[string]string
 	test				 bool
@@ -44,7 +46,7 @@ var u utilities.Utils
 // Function NewExecHandler defines a new execHandler struct.
 // execHandler.Exec() runs all the tools.
 // execHandler is attached with all the internal unexported functions.
-func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, runAll, ucinputInjection, subdomainEnum bool, outFolder, sesTokens string, tL map[string]string, test bool) *execHandler {
+func NewExecHandler(installationDir, configPath, os, targetH string, targetP int, runAll, ucinputInjection, subdomainEnum bool, outFolder string, cveRetrieval bool, sesTokens string, tL map[string]string, test bool) *execHandler {
 
 	//	Create an elementsHandler Object to be passed to the exported execHandler
 	var l elementsHandler = elementsHandler{
@@ -57,6 +59,7 @@ func NewExecHandler(installationDir, configPath, os, targetH string, targetP int
 		ucinputInjection:	  ucinputInjection,
 		subdomainEnumeration: subdomainEnum,
 		outputFolder:         outFolder,
+		cveRetrieval:		  cveRetrieval,
 		sessionTokens:        sesTokens,
 		tools:                tL,
 		test:				  test,
@@ -289,7 +292,7 @@ func (h *execHandler) injectionTest() {
 		//	Filter for Unique Items
 	
 	//	Get all URLs
-	var injectionhandler *injdetect.InjectionHandler = injdetect.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.outputFolder, h.e.sessionTokens,h.e.test)
+	var injectionhandler *injdetect.InjectionHandler = injdetect.NewInjectionHandler(h.e.targetHost, h.e.targetPort, h.e.installationDir, h.e.outputFolder, h.e.sessionTokens,h.e.test)
 	injectionhandler.InjFormCheck()
 }
 
@@ -316,8 +319,9 @@ func (h *execHandler) xsstrike() {
 
 	//	Pops nano but needs to be tested.
 	// h.execInteractive(h.e.tools["python3"] + " " + h.e.tools["xsstrike"] + ` -u "http://192.168.1.20" --data "login=Login&email=hacklab@hacklab.com&password=hacklab" --headers`)
-	h.execInteractive(h.e.tools["python3"] + " " + h.e.tools["xsstrike"] + " -u " + h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort) + " --crawl -t 10 --seeds " + h.e.outputFolder + "/urls_used_during_detection.txt")//	/root/testurls.txt")
+	h.execInteractive(h.e.tools["python3"] + " " + h.e.tools["xsstrike"] + " -u " + h.e.targetHost + ":" + strconv.Itoa(h.e.targetPort) + " --crawl -t 10 --seeds " + h.e.outputFolder + "/urls_used_during_detection.txt")	// + " --log-file " + h.e.outputFolder + "/xsstrike.txt")//	/root/testurls.txt")
 	//	/opt/XSStrike/xsstrike.py
+
 }
 
 func (h *execHandler) wpscan() {
@@ -338,6 +342,11 @@ func (h *execHandler) runTools() {
 	nmapOutFilesURL = filepath.ToSlash(nmapOutFilesURL)
 	h.execCmd(h.e.tools["nmap"] + " -Pn -sSV -T5 -oA " + nmapOutFilesURL + " " + h.e.targetHost)
 	h.execCmd(h.e.tools["nmap"] + " -Pn -p- -vv -sTV -T5 --script=banner -oA " + filepath.ToSlash(path.Join(h.e.outputFolder, "/nmap-banners")) + " " + h.e.targetHost)
+	if h.e.cveRetrieval {
+		cveretriever := cveretrieval.NewCVERetriever(h.e.outputFolder)
+		cveretriever.Retrieve()
+	}
+
 	h.execCmd(h.e.tools["httprint"] + " -P0 -s /usr/share/httprint/signatures.txt -ox " + filepath.ToSlash(path.Join(h.e.outputFolder, "/httprint-srv-version")) + " -h " + h.e.targetHost)
 	h.checkHTTPMethods()
 

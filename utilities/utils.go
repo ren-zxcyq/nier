@@ -1,6 +1,7 @@
 package utilities
 
 import (
+	// "io"
 	"bufio"
 	"encoding/base64"
 	"fmt"
@@ -10,6 +11,9 @@ import (
 	"runtime"
 	"strings"
 	"io/ioutil"
+	"regexp"
+	// "golang.org/x/text"
+	// "golang.org/x/text/encoding/charmap"
 	"github.com/dchest/uniuri"
 )
 
@@ -57,7 +61,7 @@ func (h *Utils) StringToLines(s string) (lines []string, err error) {
 func (h *Utils) ReturnFileContentsStr(absPath string) string {
 	b, err := ioutil.ReadFile(absPath) // just pass the file name
     if err != nil {
-        fmt.Print("READSTR",err)
+        fmt.Println("READSTR",err)
     }
 
     //fmt.Println(b) // print the content as 'bytes'
@@ -216,4 +220,12 @@ func (h *Utils) SeparateCookie(s string) []string {
 		fmt.Println(s)
 	}
 	return cookie
+}
+
+// As per: https://github.com/acarl005/stripansi
+// I just didn't want to import the package just for 1 method.
+const ansi = "[\u001B\u009B][[\\]()#;?]*(?:(?:(?:[a-zA-Z\\d]*(?:;[a-zA-Z\\d]*)*)?\u0007)|(?:(?:\\d{1,4}(?:;\\d{0,4})*)?[\\dA-PRZcf-ntqry=><~]))"
+func (h *Utils) StripANSI(str string) string {
+	var re = regexp.MustCompile(ansi)
+	return re.ReplaceAllString(str, "")
 }

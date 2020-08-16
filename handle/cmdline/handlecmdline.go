@@ -24,6 +24,7 @@ type cmdlineHandler struct {
 	Ucinputinjection	 bool
 	SubdomainEnumeration bool
 	OutputFolder         string
+	CVERetrieval			 bool
 	SessionTokens        string
 	Tools                map[string]string //	Config File Contents:	map[tool] = location
 	Test				 bool	//	PoC scenario. i.e. Prioritize "testimonials".
@@ -43,6 +44,7 @@ var targetPortPointer = flag.Int("p", 80, "Target Port")
 var ucinputinjectionPointer = flag.Bool("inj",false, "Enable User Controlled Input Injection checking.")
 var subdomainEnumerationPointer = flag.Bool("subdomain", false, "Enable Subdomain Enumeration.") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
 var outputFolderPointer = flag.String("o", os.Getenv("HOME") + "/Desktop/Nier_Automaton_Report", "Output Folder PATH - in format: -o \"~/Desktop/report\"")
+var cveRetrievalPointer = flag.Bool("cve",false, "Enable Listing of CVEs related to banners discovered.")
 var sessionTokensPointer = flag.String("sess", "", "Session Token(s) - in format: -sess PHPSESSID:TOKEN1;JSESSID:TOKEN2")
 var testPointer = flag.Bool("test", false, "PoC scenario. i.e. Prioritize \"testimonials\" during injection detection. Just append \"-test\" or \"--test\" to the commandline.")
 
@@ -124,6 +126,7 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	//tmpPath, _ := filepath.Abs(tmpstr)	//*outputFolderPointer)
 	h.OutputFolder = *outputFolderPointer	//tmpPath
 	
+	h.CVERetrieval = *cveRetrievalPointer
 
 	h.SessionTokens = *sessionTokensPointer
 
@@ -142,6 +145,7 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	fmt.Println("Perform All Checks:", *runallPointer)
 	fmt.Println("User Controlled Input Injection:", *ucinputinjectionPointer)
 	fmt.Println("Subdomain Enumeration:", *subdomainEnumerationPointer)
+	fmt.Println("CVE Retrieval:", *cveRetrievalPointer)
 	fmt.Println("Output Folder:", *outputFolderPointer)
 	fmt.Println("Session Tokens:", *sessionTokensPointer)
 	fmt.Println("Test:", *testPointer)

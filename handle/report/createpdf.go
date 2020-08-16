@@ -4,6 +4,7 @@ package handlepdf
 
 
 import (
+	// "os"
 	"fmt"
 	"log"
 	"path"
@@ -28,9 +29,10 @@ type pdfHandler struct {
 
 	ucinputInjection	 bool
 	subdomainEnumeration bool
+	cveRetrieval		 bool
 }
 
-func newPdfHandler(installDir, foldername string, ucinputInjection, subdomainEnumeration bool) *pdfHandler {
+func newPdfHandler(installDir, foldername string, ucinputInjection, subdomainEnumeration, cveRetrieval bool) *pdfHandler {
 	// fmt.Println("newPDFHANDLER", foldername)
 	var h pdfHandler = pdfHandler{
 		installationDir: installDir,
@@ -38,6 +40,7 @@ func newPdfHandler(installDir, foldername string, ucinputInjection, subdomainEnu
 		filename: path.Join(foldername, "Nier_Automaton_Report.pdf"),
 		ucinputInjection: ucinputInjection,
 		subdomainEnumeration: subdomainEnumeration,
+		cveRetrieval: cveRetrieval,
 	}
 	//fmt.Printf("Address of pdfHandler - %p", &h) //	Prints the address of documentHandler
 	//fmt.Println(foldername)
@@ -58,9 +61,9 @@ func (h *pdfHandler) exCreate() {
 	}
 }
 
-func CreatePdf(installDir, outputFolderName string, ucinputInjection, subdomainEnumeration bool) {
+func CreatePdf(installDir, outputFolderName string, ucinputInjection, subdomainEnumeration, cveRetrieval bool) {
 	// fmt.Println("outputfoldername is", outputFolderName)
-	pdfHandler := newPdfHandler(installDir, outputFolderName, ucinputInjection, subdomainEnumeration)
+	pdfHandler := newPdfHandler(installDir, outputFolderName, ucinputInjection, subdomainEnumeration, cveRetrieval)
 	// pdfHandler.exCreate()
 	err := pdfHandler.pdfCreate()
 	if err != nil {
@@ -163,6 +166,12 @@ func (h *pdfHandler) pdfCreate() error {
 
 	//	Add Banner Table
 	pdf = h.nmapbannertable(pdf)
+
+	// @TODO	Add CVEs table
+	if h.cveRetrieval {
+		pdf = h.cvetable(pdf)
+	}
+
 	pdf = h.httprinttable(pdf)
 	pdf = h.httpmethodstable(pdf)
 	pdf = h.robotstxttable(pdf)
@@ -956,15 +965,22 @@ func (h *pdfHandler) wpscantable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) xsstriketable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
-	var reflectedoutputURL string = path.Join(h.foldername, "/reflected_strings_and_urls.txt")
+	var reflectedoutputURL string = path.Join(h.foldername, "python3_out")//"/xsstrike.txt")//	"/form_injection_detection.txt")
 	var reflectedoutputstring string = u.ReturnFileContentsStr(reflectedoutputURL)
 	res := toolparser.ParseXSStrikeOutput(reflectedoutputstring)
 
+	// for _,i := range res {
+	// 	fmt.Println("=>",i)
+	// }
 	if len(res) > 0 {
 		pdf.AddPage()
 		pdf.Cell(40, 10, "XSStrike Table")
-		pdf.Ln(-1)	
+		pdf.Ln(-1)
+
+		pdf = h.examplemultiwraptable(pdf, res)
 	}
+	// fmt.Println("STRIKE")
+	// os.Exit(1)
 	return pdf
 }
 
@@ -972,7 +988,7 @@ func (h *pdfHandler) reflectedoutputtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 					//	@TODO	tool output is a folder		Consider just using a str for this
 				// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
 
-	var reflectedoutputURL string = path.Join(h.foldername, "/reflected_strings_and_urls")
+	var reflectedoutputURL string = path.Join(h.foldername, "/reflected_strings_and_urls.txt")
 	var reflectedoutputstring string = u.ReturnFileContentsStr(reflectedoutputURL)
 	res := toolparser.ParseReflectedOutput(reflectedoutputstring)
 
@@ -1021,13 +1037,13 @@ func (h *pdfHandler) seleniumxsstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return pdf
 }
 
-func (h *pdfHandler) injectiontesttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-	pdf.AddPage()
-	pdf.Cell(40, 10, "Injection Testing Table")
-	pdf.Ln(-1)
+// func (h *pdfHandler) injectiontesttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+// 	pdf.AddPage()
+// 	pdf.Cell(40, 10, "Injection Testing Table")
+// 	pdf.Ln(-1)
 
-	return nil
-}
+// 	return nil
+// }
 
 func (h *pdfHandler) subdomainstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
@@ -1040,6 +1056,23 @@ func (h *pdfHandler) subdomainstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 		pdf.Cell(40, 10, "Subdomain Enumeration Output Table")
 		pdf.Ln(-1)
 	
+		pdf = h.examplemultiwraptable(pdf, res)
+	}
+
+	return pdf
+}
+
+func (h *pdfHandler) cvetable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
+	
+	var cvesOutURL string = path.Join(h.foldername, "/cves.list")
+	var cvesOut string = u.ReturnFileContentsStr(cvesOutURL)
+	res := toolparser.ParseCVEs(cvesOut)
+
+	if len(res) > 0 {
+		pdf.AddPage()
+		pdf.Cell(40, 10, "CVEs Retrieved from NIST NVD")
+		pdf.Ln(-1)
+
 		pdf = h.examplemultiwraptable(pdf, res)
 	}
 

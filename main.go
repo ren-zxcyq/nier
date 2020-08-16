@@ -22,6 +22,7 @@ type elementsHandler struct {
 	ucinputinjection	 bool
 	subdomainEnumeration bool
 	outputFolder         string
+	cveRetrieval		 bool
 	sessionTokens        string
 	tools                map[string]string
 	test				 bool
@@ -41,6 +42,7 @@ func handleCmdline() {
 	hCmd.ucinputinjection = cCmd.Ucinputinjection
 	hCmd.subdomainEnumeration = cCmd.SubdomainEnumeration
 	hCmd.outputFolder = cCmd.OutputFolder
+	hCmd.cveRetrieval = cCmd.CVERetrieval
 	hCmd.sessionTokens = cCmd.SessionTokens
 	hCmd.tools = cCmd.Tools
 	hCmd.test = cCmd.Test
@@ -54,7 +56,7 @@ func generateFolder() {
 
 func runTools() {
 	fmt.Println("Initiating Exec\r\n-------------")
-	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.runAll, hCmd.ucinputinjection, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.sessionTokens, hCmd.tools, hCmd.test)
+	ex := handleexec.NewExecHandler(hCmd.installationDir, hCmd.configFilePath, hCmd.cOS, hCmd.targetHost, hCmd.targetPort, hCmd.runAll, hCmd.ucinputinjection, hCmd.subdomainEnumeration, hCmd.outputFolder, hCmd.cveRetrieval, hCmd.sessionTokens, hCmd.tools, hCmd.test)
 	ex.Exec()
 	fmt.Println("-------------")
 }
@@ -63,7 +65,7 @@ func generateReportFile() {
 	fmt.Println("Initiating Document Creation Process\t-\t", hCmd.outputFolder, "\r\n-------------")
 	//handlepdf.CreateDoc(outputFolder)
 	// fmt.Println(hCmd.installationDir, hCmd.outputFolder)
-	handlepdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder, hCmd.ucinputinjection, hCmd.subdomainEnumeration)
+	handlepdf.CreatePdf(hCmd.installationDir, hCmd.outputFolder, hCmd.ucinputinjection, hCmd.subdomainEnumeration, hCmd.cveRetrieval)
 	// fmt.Println("-------------")
 }
 

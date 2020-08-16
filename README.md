@@ -37,6 +37,8 @@ If run as root:
 Usage of /root/go/bin/nier:
   -all
         Execute every type of check. If present, flags [inj,subdomain] are enabled. If any of the flags [inj,subdomain] are submitted while flag --all is submitted, they are silently ignored.
+  -cve
+        Enable Listing of CVEs related to banners discovered.
   -host string
         Identifies target host - i.e. 127.0.0.1 or www.myshop.com or http://myshop.com (default "127.0.0.1")
   -inj

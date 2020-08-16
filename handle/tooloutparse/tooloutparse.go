@@ -4,6 +4,7 @@ package tooloutparse
 
 
 import (
+	// "os"
 	"fmt"
 	"strings"
 	"github.com/ren-zxcyq/nier/utilities"
@@ -32,7 +33,7 @@ func (h *Toolparser) ParsePing(cmdout string) bool {
 		//	Did not receive Reply Host is unreachable
 		//	@TODO	-	?Fail Gracefully?
 	}
-	fmt.Println(cmdout)
+	// fmt.Println(cmdout)
 	return r
 }
 
@@ -60,7 +61,7 @@ func (h *Toolparser) ParseNmapVuln(cmdout string) string {
 	var extract []string
 	if strings.Contains(cmdout, "Host is up") {
 		//	Nmap was successful.	-	Extract Features
-		// fmt.Println("NmapVuln - OK")
+		fmt.Println("NmapVuln - OK")
 		extract = strings.Split(cmdout, "ports")
 		// // fmt.Println(extract[1])
 		// extract = strings.Split(extract[1], "Service detection performed.")
@@ -84,7 +85,7 @@ func (h *Toolparser) ParseNikto(cmdout string) []string {
 	if strings.Contains(cmdout, "No web server found on") && strings.Contains(cmdout, "0 host(s) tested") {
 		fmt.Println("\r\n\r\n[*]\tNikto - FAIL")
 	} else {
-			fmt.Println("\r\n\r\n[*]\tNikto - OK")
+		fmt.Println("\r\n\r\n[*]\tNikto - OK")
 	}
 	// fmt.Println(cmdout)
 
@@ -178,7 +179,6 @@ func (h *Toolparser) ParseComments(cmdout string) []string {
 			//	@TODO	Check using regex maybe
 			if strings.Contains(t, "pass") || strings.Contains(t, "cred") || strings.Contains(t, "u:") || strings.Contains(t, "p:") || strings.Contains(t, "http") || strings.Contains(t, "https") || strings.Contains(t, "@") || strings.Contains(t, "log") || strings.Contains(t, ".com") || strings.Contains(t, "git") || strings.Contains(t, "maybe") || strings.Contains(t, "todo") {
 				//	Add to the report just the lines identified by the above filter
-				fmt.Println(tmp)
 				extract = append(extract,tmp)
 			}
 		}
@@ -230,7 +230,7 @@ func (h *Toolparser) ParseHTTPrint(cmdout string) []string {
 	if err != nil {
 		log.Println("Failed while separating lines in formatted tool output")
 	}
-	fmt.Println(len(strCont))
+	// fmt.Println(len(strCont))
 	//strCont = strings.Split(strCont, "<match")
 
 
@@ -381,9 +381,9 @@ func (h *Toolparser) ParseWPScanner(cmdout string) []string {
 
 	var tmp []string = strings.SplitN(cmdout,"_______________________________________________________________",3)
 	
-	for _,i := range tmp {
-		fmt.Println("TMP ",i)
-	}
+	// for _,i := range tmp {
+	// 	fmt.Println("TMP ",i)
+	// }
 	cmdout = tmp[2]
 	// cmdout
 	strCont, err := u.StringToLines(cmdout)
@@ -411,8 +411,8 @@ func (h *Toolparser) ParseSeleniumXSS(cmdout string) []string {
 		var tmp []string = strings.SplitN(cmdout,"[*]",numberOfAlertsDetected+1)
 		
 		// var tmp []string
-		for i,j := range tmp {
-			fmt.Println("TMP",i,"-",j)
+		for _,j := range tmp {
+			// fmt.Println("TMP",i,"-",j)
 			if len(j) > 0 {
 				var tmps []string
 				// extract = append(extract, j)
@@ -449,12 +449,16 @@ func (h *Toolparser) ParseReflectedOutput(cmdout string) []string {
 		log.Println("Failed while separating lines in formatted tool output")
 	}
 	for _,v := range strCont {
+		v = strings.TrimSpace(v)
 		if strings.HasPrefix(v,"[*]") {
 			var tmp []string = strings.SplitN(v,"[*]",2)
 			var tmps string = strings.TrimSpace(tmp[1])
 			extract = append(extract,tmps)
 		} else {
-			extract = append(extract,string(v))
+			var t string = strings.TrimSpace(string(v))
+			if (len(t) > 0) {
+				extract = append(extract,string(t))
+			}
 		}
 	}
 	return extract
@@ -469,7 +473,27 @@ func (h *Toolparser) ParseXSStrikeOutput(cmdout string) []string {
 		log.Println("Failed while separating lines in formatted tool output")
 	}
 	for _,v := range strCont {
-		if strings.HasPrefix(v,"[+]") || strings.HasPrefix(v,"[++]") || strings.HasPrefix(v,"[!]") {
+		
+		// // 	b += u.ConvertFromAnsiToUTF8([]byte(string(r)))
+		// var sv string = string(v)	//	strings.TrimSpace(string(vb))
+		v = u.StripANSI(v)
+		v = strings.TrimSpace(v)
+		if strings.HasPrefix(v,`[+]`) || strings.HasPrefix(v,`[++]`) || strings.HasPrefix(v,`[!]`) {
+			extract = append(extract,strings.TrimSpace(v))
+		}
+	}
+	return extract
+}
+
+func (h *Toolparser) ParseCVEs(cmdout string) []string {
+	
+	var extract []string
+	strCont, err := u.StringToLines(cmdout)
+	if err != nil {
+		log.Println("Failed while separating lines in formatted tool output")
+	}
+	for _,v := range strCont {
+		if len(v) > 0 {
 			extract = append(extract,v)
 		}
 	}

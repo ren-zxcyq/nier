@@ -36,13 +36,14 @@ var extforms []extractedform
 var reflectionsstring string
 var xssdiscovered string
 var inj	map[string]string
-var flaggedforms []extractedform
+// var flaggedforms []extractedform
 
 type InjectionHandler struct {
 	target			string
 	targetport		int
 	// targethost		string	//	A concatenation of proto://target:targetport
 	sessiontokens	string
+	instFolder		string
 	outputFolder	string
 	httpprefix		string
 	test			bool
@@ -64,10 +65,10 @@ type extractedform struct {	//	@TODO	add src
 }
 
 //
-func NewInjectionHandler(target string, targetport int, outputFolder string, stokens string, test bool) *InjectionHandler {
+func NewInjectionHandler(target string, targetport int, instFolder, outputFolder string, stokens string, test bool) *InjectionHandler {
 
 	//	Create InjectionHandler
-	var h InjectionHandler = InjectionHandler{target: target, targetport: targetport, sessiontokens: stokens, outputFolder: outputFolder, httpprefix: "http://", test: test}
+	var h InjectionHandler = InjectionHandler{target: target, targetport: targetport, sessiontokens: stokens, instFolder: instFolder, outputFolder: outputFolder, httpprefix: "http://", test: test}
 
 	//fmt.Printf("Address of InjectionHandler - %p", &h) //	Prints the address of the Handler
 	return &h
@@ -278,7 +279,43 @@ func (h *InjectionHandler) checkforuqstrings(urls []string) {
 	for m,_ := range reflected {
 		fmt.Println("\r\n-")
 		fmt.Println(m, "\t-\t", reflected[m])
-		reflectionsstring += "[*]\t" + m + "\tfound in:\r\n"
+		reflectionsstring += "[*]\t" + m
+
+		findwhichformitbelongsto:
+			for _,fel := range extforms {
+				for _,v := range fel.uqelemstring {
+					// for _,el := range v {
+					if strings.Contains(v,m) {
+						// fmt.Println(fel.src)
+						// fmt.Println(fel.contents)
+
+						reflectionsstring += "\r\nInjected in: " + fel.src
+						reflectionsstring += "\r\nParam: " + v
+						reflectionsstring += "\r\n" + fel.contents + "\r\n"
+
+						break findwhichformitbelongsto
+					}
+				}
+			}
+		// os.Exit(22)
+
+		// for _,v := range form.elements {
+		// 	tmp = strings.SplitN(v,":",2)
+		// 	uq = u.UniqueStringAlphaNum()
+		// 	// fmt.Println("APPENDING", tmp[0] + ":" + uq)
+
+		// 	if tmp[0] != "submit" {
+		// 		form.uqelemstring = append(form.uqelemstring, tmp[0] + ":" + uq)				//	REMOVED UQ FROM HERE
+		// 		data.Set(tmp[0],uq)
+		// 	} else {
+		// 		// fmt.Println("CONTAINS submit")
+		// 		form.uqelemstring = append(form.uqelemstring, tmp[0] + ":")
+		// 		data.Set(tmp[0],"")
+		// 	}
+		// }
+
+
+		reflectionsstring += "\tfound in:\r\n"
 		for _,ru := range reflected[m] {
 			reflectionsstring += ru + "\r\n"
 		}
@@ -317,7 +354,7 @@ func (h *InjectionHandler) checkforuqstrings(urls []string) {
 					// Get Payloads. I.E. Either Gen() or Read entire file
 					// h.genXSSPayloads()
 					// Read Payloads file
-					payloadfile, err := os.Open("/root/go/src/github.com/ren-zxcyq/nier/resources/poc-xss-payloads.txt")
+					payloadfile, err := os.Open(h.instFolder + "/resources/poc-xss-payloads.txt")
 					if err != nil {
 						fmt.Println(err)
 					}
