@@ -106,33 +106,12 @@ func (h *AppSpider) Organize() {
 		}
 	}
 
-	// fmt.Println("----------------------")
-	// fmt.Println("before being unique")
-	// fmt.Println("----------------------")
-
-	// fmt.Println(len(urls))
-	// fmt.Println(len(formsexistin_URL))
-	// fmt.Println(len(uploadform_URL))
-	// fmt.Println(len(linkfinder_URLs))
-	// fmt.Println(len(javascript_URLs))
-
-
 	urls = h.uniqueslice(urls)
 	formsexistin_URL = h.uniqueslice(formsexistin_URL)
 	uploadform_URL = h.uniqueslice(uploadform_URL)
 	linkfinder_URLs = h.uniqueslice(linkfinder_URLs)
 	javascript_URLs = h.uniqueslice(javascript_URLs)
 	subdomain_URLs = h.uniqueslice(subdomain_URLs)
-
-	// fmt.Println("----------------------")
-	// fmt.Println("after uq")
-	// fmt.Println("----------------------")
-
-	// fmt.Println(len(urls))
-	// fmt.Println(len(formsexistin_URL))
-	// fmt.Println(len(uploadform_URL))
-	// fmt.Println(len(linkfinder_URLs))
-	// fmt.Println(len(javascript_URLs))
 
 
 	// Convert to string
@@ -213,43 +192,6 @@ func (h *AppSpider) isstrinlinks(str string) bool {
 
 	return r
 }
-
-// //	Checks if the given string is a common image file or
-// //	if it contains a colon, common in "http://..." links.
-// //	Essentially, we want to limit links to local html or link containing files.
-// func (h *AppSpider) isvalidrellink(str string) bool {
-// 	var r bool = true
-// 	var filter []string = []string{":",".png",".jpg", ".jpeg", ".gif", ".ico"}
-// 	for _,v := range filter {
-
-// 		// fmt.Println("STR IS", str, "\t-\t", v)
-// 		if strings.Contains(str, v) {	//	v.contents
-// 			r = false
-// 		}
-// 		// fmt.Println("r = ",r)
-// 	}
-// 	return r
-// }
-
-// func (h *AppSpider) uniquenesscheck(tocheck []string) {					//	tocheck []extractedlink
-
-// 	if len(extlinks) > 0 {
-
-// 		for _,v := range tocheck {
-// 			if !isstrinforms(v) {	//	v.contents
-// 				//	Appending
-// 				extlinks = append(extlinks, v)
-// 			} else {
-// 				//	Not Appending
-// 			}
-// 		}
-
-// 	} else {
-// 		extlinks = append(extlinks, tocheck[0])
-// 		h.uniquenesscheck(tocheck[1:])
-// 	}
-// }
-
 
 func (h *AppSpider) gobusterandrelURLs() []string {
 

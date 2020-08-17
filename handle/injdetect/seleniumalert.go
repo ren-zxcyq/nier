@@ -1,20 +1,13 @@
 package injdetect
 
 import (
-	// "os"
 	"fmt"
 	"time"
-
 	"io/ioutil"
-	// "bufio"
-	// "regexp"
-	
 	"net/url"
-	// "resource"
 	"net/http"
 	"strconv"
 	"strings"
-
 
 	"github.com/tebeka/selenium"
 	"github.com/PuerkitoBio/goquery"
@@ -23,8 +16,8 @@ import (
 // selenium.WebDriver config
 var wd selenium.WebDriver
 const (
-	seleniumPath	= "/opt/tebeka-selenium/selenium/vendor/selenium-server.jar"
-	geckoDriverPath = "/opt/tebeka-selenium/selenium/vendor/geckodriver"
+	seleniumPath	= "~/go/src/github.com/tebeka/selenium/vendor/selenium-server.jar"	//	/opt/tebeka-selenium/selenium/vendor/selenium-server.jar
+	geckoDriverPath = "~/go/src/github.com/tebeka/selenium/vendor/geckodriver"			//"/opt/tebeka-selenium/selenium/vendor/geckodriver"
 	port			= 9999
 )
 var options []selenium.ServiceOption
@@ -118,35 +111,6 @@ func (h *InjectionHandler) checkForAlertInPage(url string, identifier string) (s
 		}
 	return
 
-
-	/*
-		if alertText == "" {
-			wd.WaitWithTimeoutAndInterval(condition, 3*time.Second, 1*time.Second)
-		} else if alertText != "1" {
-			fmt.Printf("Expected '1' but got '%s'\r\n", alertText)
-		} else {
-			fmt.Println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\r\nIT WORKED!\r\n^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-		}
-	*/
-	///////////////////////////////
-	// activeelement,_ := wd.ActiveElement()
-	// fmt.Println(activeelement)
-
-	// flag,_ := activeelement.IsDisplayed()
-	// fmt.Println(flag)
-
-	// contents,_ := activeelement.Text()
-	// fmt.Println(contents)
-
-	///////////////////////////////
-
-	// if err := wd.AcceptAlert(); err != nil {
-	// 	fmt.Printf("wd.AcceptAlert() returned error: %v", err)
-	// }
-
-	// os.Exit(1)
-	
-	
 }
 
 // function removeelements connects to 192.168.1.20/admin/, logs in using admin:april

@@ -4,7 +4,6 @@ package tooloutparse
 
 
 import (
-	// "os"
 	"fmt"
 	"strings"
 	"github.com/ren-zxcyq/nier/utilities"
@@ -31,7 +30,6 @@ func (h *Toolparser) ParsePing(cmdout string) bool {
 		fmt.Println("Ping - FAIL")
 		r = false
 		//	Did not receive Reply Host is unreachable
-		//	@TODO	-	?Fail Gracefully?
 	}
 	// fmt.Println(cmdout)
 	return r
@@ -43,15 +41,12 @@ func (h *Toolparser) ParseNmapSV(cmdout string) string {
 		// //	Nmap was successful.	-	Extract Features
 		// fmt.Println("NmapSV - OK")
 		extract = strings.Split(cmdout, "ports")
-		// // fmt.Println(extract[1])
 		extract = strings.Split(extract[1], "Service detection performed.")
-		// // fmt.Println(extract[0])
 		// //	?DONE?@TODO	-	Connect with Reporting
 		return extract[0]
 	} else {
 		//	Nmap did not run smoothly. "Host is up" was not part of Stdout
 		// fmt.Println("NmapSV - FAIL")
-		//	@TODO	-	?Fail Gracefully?
 		return fmt.Sprintln("NmapSV - FAIL")
 	}
 	// fmt.Println(cmdout)
@@ -63,10 +58,6 @@ func (h *Toolparser) ParseNmapVuln(cmdout string) string {
 		//	Nmap was successful.	-	Extract Features
 		fmt.Println("NmapVuln - OK")
 		extract = strings.Split(cmdout, "ports")
-		// // fmt.Println(extract[1])
-		// extract = strings.Split(extract[1], "Service detection performed.")
-		// // fmt.Println(extract[0])
-		// //	@TODO	-	Connect with Reporting
 		return extract[1]
 	} else {
 		//	Nmap did not run smoothly. "Host is up" was not part of Stdout
@@ -157,8 +148,6 @@ func (h *Toolparser) ParseComments(cmdout string) []string {
 	var extract []string
 	var cmdoutlist []string
 	var tmp, t string
-	// var tmplist []string
-	
 	
 	cmdoutlist = strings.SplitN(cmdout, "| http-comments-displayer:", 2)
 	cmdoutlist = strings.SplitN(cmdoutlist[1], "MAC Address: ", 2)
@@ -178,7 +167,7 @@ func (h *Toolparser) ParseComments(cmdout string) []string {
 			t = strings.ToLower(tmp)
 			//	@TODO	Check using regex maybe
 			if strings.Contains(t, "pass") || strings.Contains(t, "cred") || strings.Contains(t, "u:") || strings.Contains(t, "p:") || strings.Contains(t, "http") || strings.Contains(t, "https") || strings.Contains(t, "@") || strings.Contains(t, "log") || strings.Contains(t, ".com") || strings.Contains(t, "git") || strings.Contains(t, "maybe") || strings.Contains(t, "todo") {
-				//	Add to the report just the lines identified by the above filter
+				//	Add just the lines identified by the above filter
 				extract = append(extract,tmp)
 			}
 		}
@@ -193,37 +182,10 @@ func (h *Toolparser) ParseHTTPrint(cmdout string) []string {
 	var tmplist []string
 	var line string
 
-	//	guessing
-	//	opt1
-	// cmdoutlist = strings.SplitN(cmdout, "Derived Signature:", 2)
-	// cmdoutlist = strings.SplitN(cmdoutlist[1], "------------------------", 2)
-	//	opt2
-	// cmdoutlist = strings.SplitN(cmdout, "<!-- Reported signature", 2)
-	// cmdoutlist = strings.SplitN(cmdoutlist[1], "-->", 2)
-
 	cmdoutlist = strings.SplitN(cmdout, "<servers>", 2)
 	cmdoutlist = strings.SplitN(cmdoutlist[1], ">", 2)
 
 	
-	// strCont, err := u.StringToLines(cmdoutlist[0])
-	// if err != nil {
-	// 	log.Println("Failed while separating lines in formatted tool output")
-	// }
-	// for _,v := range strCont {
-
-
-
-	// 	//extract = append(extract,v)
-	// 	fmt.Println("first", v)
-	// }
-
-	
-	//	opt1
-	// cmdoutlist = strings.SplitN(cmdoutlist[1], "<!-- Best Matches", 2)
-	// // cmdoutlist = strings.SplitN(cmdoutlist[1], "-->", 2)
-	//	opt2
-	// cmdoutlist = strings.
-
 	// extract = append(extract, "Guesses:")
 	//	version guess ranking
 	strCont, err := u.StringToLines(cmdoutlist[1])
@@ -235,9 +197,6 @@ func (h *Toolparser) ParseHTTPrint(cmdout string) []string {
 
 
 	for k,val := range strCont {
-		// extract = append(extract,val)
-		// fmt.Println("second", val)
-		// fmt.Println("second", val)
 		tmplist = strings.Split(val, `"`)
 
 		line = ""
@@ -263,7 +222,6 @@ func (h *Toolparser) ParseHTTPrint(cmdout string) []string {
 			
 		}
 
-		// fmt.Println("third", line)
 		if len(line) > 0 {
 			extract = append(extract, line)
 		}
@@ -285,7 +243,6 @@ func (h *Toolparser) ParseHTTPMethods(cmdout string) []string {
 
 
 	cmdoutlist = strings.SplitN(cmdout, "Method - Status\r\n-------------", 2)
-	// fmt.Println("AAAAAAAA", cmdoutlist[0]),
 	if strings.Contains(cmdoutlist[0], "HTTPS") {
 		extract = append(extract, "HTTPS")
 	} else {
@@ -381,9 +338,6 @@ func (h *Toolparser) ParseWPScanner(cmdout string) []string {
 
 	var tmp []string = strings.SplitN(cmdout,"_______________________________________________________________",3)
 	
-	// for _,i := range tmp {
-	// 	fmt.Println("TMP ",i)
-	// }
 	cmdout = tmp[2]
 	// cmdout
 	strCont, err := u.StringToLines(cmdout)
@@ -431,9 +385,6 @@ func (h *Toolparser) ParseSeleniumXSS(cmdout string) []string {
 			}
 		}
 		
-		// for _,v := range strCont {
-		// 	extract = append(extract, string(v))
-		// }
 	} else {
 		extract = append(extract, "No Active alert pop-ups containing the injected strings were detected.")
 	}

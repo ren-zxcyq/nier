@@ -1,5 +1,6 @@
-// Package handlefolder checks if the requested output folder exists and creates it if not.
-// If the folder exists, the package terminates execution.
+// Package cveretrieval retrieves CVEs related to the banners extracted by
+// nmap -script=banners.
+// 10 items per banner are returned and saved to a file.
 package cveretrieval
 
 import (
@@ -59,7 +60,9 @@ func (h *cveRetriever) Retrieve() {
 
 func (h *cveRetriever) retrieveforbanner(banner string) string {
 	//	https://nvd.nist.gov/vuln/search/results?form_type=Basic&results_type=overview&query=apache&search_type=all
-	var nvd = "https://nvd.nist.gov/vuln/search/results?form_type=Basic&results_type=overview&query=" + banner + "&search_type=all"
+	var nvd = "https://nvd.nist.gov/vuln/search/results?"
+	nvd += "form_type=Basic&results_type=overview&query=" + banner
+	nvd += "&search_type=all"
 
 
 	tsec := utilities.NewHTTPShandler()
@@ -165,9 +168,6 @@ func (h *cveRetriever) retrieveBanners() []string{
 
 			// fmt.Println("banner:\t", banner)
 			banners = append(banners, url.QueryEscape(banner))
-			// for _,n := range row {
-			// 	fmt.Println("adf", row[4])
-			// }
 		}
 		// banners = append(banners, j)
 	}

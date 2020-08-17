@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	// "path/filepath"
 	"strings"
 
 	"github.com/ren-zxcyq/nier/utilities"
@@ -22,6 +21,7 @@ type cmdlineHandler struct {
 	TargetPort           int
 	RunAll				 bool
 	Ucinputinjection	 bool
+	SQLinjection		 bool
 	SubdomainEnumeration bool
 	OutputFolder         string
 	CVERetrieval			 bool
@@ -38,10 +38,11 @@ func NewCmdlineHandler() *cmdlineHandler {
 	return &h
 }
 
-var runallPointer = flag.Bool("all",false, "Execute every type of check. If present, flags [inj,subdomain] are enabled. If any of the flags [inj,subdomain] are submitted while flag --all is submitted, they are silently ignored.")
+var runallPointer = flag.Bool("all",false, "Execute every type of check. If present, flags [rinj,sqlinj,subdomain] are enabled. If any of the flags [rinj,sqlinj,subdomain] are submitted while flag --all is submitted, they are silently ignored.")
 var targetHostPointer = flag.String("host", "127.0.0.1", "Identifies target host - i.e. 127.0.0.1 or www.myshop.com or http://myshop.com")
 var targetPortPointer = flag.Int("p", 80, "Target Port")
-var ucinputinjectionPointer = flag.Bool("inj",false, "Enable User Controlled Input Injection checking.")
+var ucinputinjectionPointer = flag.Bool("rinj",false, "Enable User Controlled Input Injection checking.")
+var sqlinjectionPointer = flag.Bool("sqlinj",false, "Enable SQL Injection checking. (SQLMap).")
 var subdomainEnumerationPointer = flag.Bool("subdomain", false, "Enable Subdomain Enumeration.") ///Disable Subdomain Enumeration - Pass in [true or True] to enable (default false)")
 var outputFolderPointer = flag.String("o", os.Getenv("HOME") + "/Desktop/Nier_Automaton_Report", "Output Folder PATH - in format: -o \"~/Desktop/report\"")
 var cveRetrievalPointer = flag.Bool("cve",false, "Enable Listing of CVEs related to banners discovered.")
@@ -91,12 +92,6 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	var u utilities.Utils
 	h.C_OS = u.DetectOS()
 	// cwd, _ := os.Getwd()
-	// h.InstallationDir = cwd
-	// // configFilePath = path.Join(cwd, ".config")
-	// h.ConfigFilePath = path.Join(cwd, ".config")
-
-	// fmt.Println("YOOO", u.GetGOROOT())
-	// fmt.Println("YAA", path.Join(u.GetGOPATH(), "src/github.com/ren-zxcyq/nier/"))
 
 	h.InstallationDir = path.Join(u.GetGOPATH(), "src/github.com/ren-zxcyq/nier/")
 	h.ConfigFilePath = path.Join(h.InstallationDir, ".config")
@@ -110,31 +105,21 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	if *runallPointer == true {
 		h.RunAll = true
 		h.Ucinputinjection = true
+		h.SQLinjection = true
 		h.SubdomainEnumeration = true
 	} else {
 		h.RunAll = *runallPointer
 		h.Ucinputinjection = *ucinputinjectionPointer
+		h.SQLinjection = *sqlinjectionPointer
 		h.SubdomainEnumeration = *subdomainEnumerationPointer
 	}
 
-	//h.OutputFolder = *outputFolderPointer
-	// h.OutputFolder = path.Join(cwd, h.OutputFolder)
-
-	//	Determine report file path
-	// tmpstr := *outputFolderPointer
-	// fmt.Println("*outputFolderPointer:", *outputFolderPointer)
-	//tmpPath, _ := filepath.Abs(tmpstr)	//*outputFolderPointer)
-	h.OutputFolder = *outputFolderPointer	//tmpPath
-	
+	h.OutputFolder = *outputFolderPointer
 	h.CVERetrieval = *cveRetrievalPointer
-
 	h.SessionTokens = *sessionTokensPointer
 
-	h.Test = *testPointer	//	h.isFlagPassed("testPointer")
+	h.Test = *testPointer
 
-	// fmt.Println("TESTING ", h.Test)
-	// os.Exit(1)
-	
 	//	Show args
 	fmt.Println("\r\nSelected:", "\r\n-------------")
 	fmt.Println("Installation Dir:", h.InstallationDir)
@@ -144,6 +129,7 @@ func (h *cmdlineHandler) SetUpFlags() map[string]string {
 	fmt.Println("Target Port:", *targetPortPointer)
 	fmt.Println("Perform All Checks:", *runallPointer)
 	fmt.Println("User Controlled Input Injection:", *ucinputinjectionPointer)
+	fmt.Println("SQL Injection:", *sqlinjectionPointer)
 	fmt.Println("Subdomain Enumeration:", *subdomainEnumerationPointer)
 	fmt.Println("CVE Retrieval:", *cveRetrievalPointer)
 	fmt.Println("Output Folder:", *outputFolderPointer)

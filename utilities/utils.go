@@ -1,7 +1,6 @@
 package utilities
 
 import (
-	// "io"
 	"bufio"
 	"encoding/base64"
 	"fmt"
@@ -67,7 +66,7 @@ func (h *Utils) ReturnFileContentsStr(absPath string) string {
     //fmt.Println(b) // print the content as 'bytes'
     str := string(b) // convert content to a 'string'
 	// fmt.Println(str) // print the content as a 'string'
-	// fmt.Println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+	// fmt.Println("%%%%%%%%%%%%%%%")
 	
 	return fmt.Sprintln(str)
 }

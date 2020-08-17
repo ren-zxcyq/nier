@@ -1,3 +1,6 @@
+// Package utilites holds package agnostic functions.
+// httpsmethods.go is the equivalent to httpmethods.go for
+// https requests.
 package utilities
 
 import (
@@ -106,46 +109,6 @@ func (h *HTTPShandler) OptionsVerify(url string) []string {
 	}
 	return res
 }
-
-// func (h *HTTPShandler) actualTest(link string) {
-
-//     transport := &http.Transport{
-//         TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-//     }
-// 	client := &http.Client{Transport: transport}
-	
-
-
-// 	method := "OPTIONS"
-//     req, rerr := http.NewRequest(method, link, nil)	//client.Get(link)
-// 	if rerr != nil {
-//         fmt.Println(rerr)
-// 	}
-// 	fmt.Println("Sending OPTIONS")
-// 	response, e := client.Do(req)
-// 	if e != nil {
-// 		fmt.Sprint("Request Method -", e)
-// 		os.Exit(1)
-// 	}
-	
-// 	fmt.Println("Sent OPTIONS - ",)
-
-
-
-
-//     defer response.Body.Close()
-
-//     content, _ := ioutil.ReadAll(response.Body)
-//     s := string(content)	//strings.TrimSpace(string(content))
-
-//     fmt.Println(s)
-
-//     // out := s + " world"      
-//     // Not working POST...
-//     // resp, err := client.Post(link, "text/plain", &out)
-
-// }
-
 
 // Get URL, check for http:// or https:// prefix
 // add https:// if not present.

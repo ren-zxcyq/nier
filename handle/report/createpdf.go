@@ -4,7 +4,6 @@ package handlepdf
 
 
 import (
-	// "os"
 	"fmt"
 	"log"
 	"path"
@@ -13,7 +12,6 @@ import (
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
-	//"github.com/jung-kurt/gofpdf/internal/example"
 	tooloutparse "github.com/ren-zxcyq/nier/handle/tooloutparse"
 	"github.com/ren-zxcyq/nier/utilities"
 )
@@ -28,11 +26,12 @@ type pdfHandler struct {
 	foldername      string
 
 	ucinputInjection	 bool
+	sqlinjection		 bool
 	subdomainEnumeration bool
 	cveRetrieval		 bool
 }
 
-func newPdfHandler(installDir, foldername string, ucinputInjection, subdomainEnumeration, cveRetrieval bool) *pdfHandler {
+func newPdfHandler(installDir, foldername string, ucinputInjection, sqlinjection, subdomainEnumeration, cveRetrieval bool) *pdfHandler {
 	// fmt.Println("newPDFHANDLER", foldername)
 	var h pdfHandler = pdfHandler{
 		installationDir: installDir,
@@ -61,9 +60,9 @@ func (h *pdfHandler) exCreate() {
 	}
 }
 
-func CreatePdf(installDir, outputFolderName string, ucinputInjection, subdomainEnumeration, cveRetrieval bool) {
+func CreatePdf(installDir, outputFolderName string, ucinputInjection, sqlinjection, subdomainEnumeration, cveRetrieval bool) {
 	// fmt.Println("outputfoldername is", outputFolderName)
-	pdfHandler := newPdfHandler(installDir, outputFolderName, ucinputInjection, subdomainEnumeration, cveRetrieval)
+	pdfHandler := newPdfHandler(installDir, outputFolderName, ucinputInjection, sqlinjection, subdomainEnumeration, cveRetrieval)
 	// pdfHandler.exCreate()
 	err := pdfHandler.pdfCreate()
 	if err != nil {
@@ -71,91 +70,13 @@ func CreatePdf(installDir, outputFolderName string, ucinputInjection, subdomainE
 	}
 }
 
-// ExampleFpdf_HTMLBasicNew demonstrates internal and external links with and without basic
-// HTML.
-// func (h *pdfHandler) pdfCreate() {
-// 	pdf := gofpdf.New("P", "mm", "A4", "")
-// 	// First page: manual local link
-// 	pdf.AddPage()
-// 	pdf.SetFont("Helvetica", "", 20)
-// 	_, lineHt := pdf.GetFontSize()
-// 	pdf.Write(lineHt, "To find out what's new in this tutorial, click ")
-// 	pdf.SetFont("", "U", 0)
-// 	link := pdf.AddLink()
-// 	pdf.WriteLinkID(lineHt, "here", link)
-// 	pdf.SetFont("", "", 0)
-// 	// Second page: image link and basic HTML with link
-// 	pdf.AddPage()
-// 	pdf.SetLink(link, 0, -1)
-// 	pdf.Image(example.ImageFile("logo.png"), 10, 12, 30, 0, false, "", 0, "http://www.fpdf.org")
-// 	pdf.SetLeftMargin(45)
-// 	pdf.SetFontSize(14)
-// 	_, lineHt = pdf.GetFontSize()
-// 	htmlStr := `You can now easily print text mixing different styles: <b>bold</b>, ` +
-// 		`<i>italic</i>, <u>underlined</u>, or <b><i><u>all at once</u></i></b>!<br><br>` +
-// 		`<center>You can also center text.</center>` +
-// 		`<right>Or align it to the right.</right>` +
-// 		`You can also insert links on text, such as ` +
-// 		`<a href="http://www.fpdf.org">www.fpdf.org</a>, or on an image: click on the logo.`
-// 	html := pdf.HTMLBasicNew()
-// 	html.Write(lineHt, htmlStr)
-// 	fileStr := example.Filename("Fpdf_HTMLBasicNew")
-// 	err := pdf.OutputFileAndClose(fileStr)
-// 	example.Summary(err, fileStr)
-// 	// Output:
-// 	// Successfully generated pdf/Fpdf_HTMLBasicNew.pdf
-// }
-
-/*	pdfCreate()
-//	This should be okay so far but let's replace it with the website version.
-func (h *pdfHandler) imageFile(fileStr string) string {
-	return filepath.Join(gofpdfDir, "image", fileStr)
-}
-
-
-func (h *pdfHandler) pdfCreate() error {
-	pdf := gofpdf.New("P", "mm", "A4", "")
-	pdf.AddPage()
-	pdf.SetFont("Arial", "B", 16)
-
-	// Set Header
-	pdf.SetTopMargin(30)
-	pdf.SetHeaderFuncMode(func() {
-		pdf.Image(h.imageFile("avatar.png"), 10, 6, 30, 0, false, "", 0, "")
-		pdf.SetY(5)
-		pdf.SetFont("Arial", "B", 15)
-		pdf.Cell(80, 0, "")
-		pdf.CellFormat(30, 10, "Title", "1", 0, "C", false, 0, "")
-		pdf.Ln(20)
-	}, true)
-	/*
-	// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
-	pdf.CellFormat(190, 7, "Nier - Report", "0", 0, "CM", false, 0, "")
-
-	// ImageOptions(src, x, y, width, height, flow, options, link, linkStr)
-	pdf.ImageOptions(
-		"avatar.jpg",
-		20, 20,
-		140, 100,	//
-		false,
-		gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
-		0,
-		"",
-	)
-
-	pdf.CellFormat(190, 7, "- by zxcyq", "0", 0, "CM", false, 0, "")
-
-	return pdf.OutputFileAndClose(h.filename)
-}
-*/
-
 // Creates a document -> Sets Header & Creates a table
 // 			uses h.newReport() to do so
 func (h *pdfHandler) pdfCreate() error {
 
 	//	Create a new PDF doc & write title & current date
 	pdf := h.newReport()
-	//FROM HERE
+
 	//	Filter Tool Output
 
 	//	Add Target Table
@@ -167,7 +88,6 @@ func (h *pdfHandler) pdfCreate() error {
 	//	Add Banner Table
 	pdf = h.nmapbannertable(pdf)
 
-	// @TODO	Add CVEs table
 	if h.cveRetrieval {
 		pdf = h.cvetable(pdf)
 	}
@@ -193,13 +113,12 @@ func (h *pdfHandler) pdfCreate() error {
 
 	pdf = h.nmapvulnstable(pdf)
 	pdf = h.niktotable(pdf)
+	// pdf = h.whatwebtable(pdf)
 
+	if h.sqlinjection {
+		// pdf = h.sqlmaptable(pdf)
+	}
 
-	// pdf = h.xsstriketable(pdf)
-	// pdf = h.reflectedoutputtable(pdf)
-
-
-	//TO HERE
 	if pdf.Err() {
 		log.Printf("Failed while creating the PDF Report: %s\n", pdf.Error())
 		return pdf.Error()
@@ -214,7 +133,7 @@ func (h *pdfHandler) pdfCreate() error {
 	return nil
 }
 
-// This creates the Document template
+// Creates a Document template
 func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 	//	New() creates
 
@@ -266,7 +185,7 @@ func (h *pdfHandler) newReport() *gofpdf.Fpdf {
 			// 20, 20,
 			// 140, 100,	//
 			10, 6,
-			30, 0,
+			15, 0,
 			false,
 			gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
 			0,
@@ -382,8 +301,8 @@ func (h *pdfHandler) image(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 		h.installationDir+"/image/avatar.jpg",
 		// 20, 20,
 		// 140, 100,	//
-		40, 70,
-		140, 100,
+		55, 70,
+		100, 100,		//	140, 100,
 		false,
 		gofpdf.ImageOptions{ImageType: "JPG", ReadDpi: true},
 		0,
@@ -455,42 +374,7 @@ func (h *pdfHandler) targettable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	}
 	pdf = h.examplemultiwraptable(pdf, strCont)
 
-	/*
-		for _, line := range tableCont {
-			r := strings.TrimSpace(line)
-			l := len(r)
-			if (l == 0) || (l == 1) || (r == "|") {
-				// // fmt.Println(`AAAAAAAAAAAAAAAAAAAAAAA`)
-				// // pdf.CellFormat(195, 7, "MARKED", "1", 0, "LM", false, 0, "")
-				// // pdf.Ln(-1)
-				// continue
-				// // // for i, str := range line {
-				// // pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
-				// // pdf.Ln(-1)
-				// // // fmt.Println("hELLOS", line)
-				// // // }
-				continue
-
-			} else {
-				// for i, str := range line {
-				pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
-				pdf.Ln(-1)
-				// fmt.Println("hELLOS", line)
-				// }
-				//continue
-			}
-		}
-	*/
-	/*	@UNCOMMENT
-		pdf = h.header(pdf, tableCols)
-		pdf = h.table(pdf, tableCont)
-
-		pdf.SetFont(fontname, "B", 12)
-		pdf.SetFillColor(240, 240, 240)
-	*/
 	return pdf
-	// CellFormat(width, height, text, border, position after, align, fill, link, linkStr)
-	// pdf.CellFormat(190, 7, "Nier - Report", "0", 0, "CM", false, 0, "")
 }
 
 func (h *pdfHandler) toolstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
@@ -581,7 +465,6 @@ func (h *pdfHandler) nmapvulnstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.F
 	}
 
 	pdf.AddPage()
-	// pdf.Ln(-1)
 
 	//	Create Table Header & Fill
 	//pdf = h.header(pdf, tableCols)
@@ -590,10 +473,6 @@ func (h *pdfHandler) nmapvulnstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.F
 
 	pdf.Cell(40, 10, "Nmap: Vulnerability Scan Results")
 	pdf.Ln(-1)
-	// tableCols := []string{"Tool", "Description", "Command Opts"}
-	// tableCont := [][]string{
-	// 	{"1", "ping", "Initial interaction", "ping -c 1 $TARGET"},
-	// }
 
 	pdf.SetFont(fontname, "", 10)
 	pdf.SetFillColor(255, 255, 255)
@@ -602,24 +481,14 @@ func (h *pdfHandler) nmapvulnstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gofpdf.F
 		r := strings.TrimSpace(line)
 		l := len(r)
 		if (l == 0) || (l == 1) || (r == "|") {
-			// // fmt.Println(`AAAAAAAAAAAAAAAAAAAAAAA`)
-			// // pdf.CellFormat(195, 7, "MARKED", "1", 0, "LM", false, 0, "")
-			// // pdf.Ln(-1)
-			// continue
-			// // // for i, str := range line {
-			// // pdf.CellFormat(195, 7, line, "1", 0, "LM", false, 0, "")
-			// // pdf.Ln(-1)
-			// // // fmt.Println("hELLOS", line)
-			// // // }
+
 			continue
 
 		} else {
-			// for i, str := range line {
+
 			pdf.CellFormat(195, 7, line, "TB", 0, "LM", false, 0, "")	//	"1" -> "TB"
 			pdf.Ln(-1)
-			// fmt.Println("hELLOS", line)
-			// }
-			//continue
+
 		}
 	}
 
@@ -638,22 +507,11 @@ func (h *pdfHandler) urlsdiscoveredtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf { //*gof
 	////////////////////////////////////////////////////////////////////////////////////////
 	//	Filter Gobuster output
 	var detectedURLsURL string = path.Join(h.foldername, "spider_URLs.list")	//"urls_used_during_detection.txt")	//	they both have the same length
-	//gobusterOutURL = filepath.ToSlash(gobusterOutURL)
-	//gobusterOutURL = strings.Replace(gobusterOutURL, ":", "", -1)
-	// fmt.Println("||||||||||\r\n",gobusterOutURL)
-	var detectedURLstring string = u.ReturnFileContentsStr(detectedURLsURL)
-	// res := gobuster	//toolparser.ParseNmapSV(gobuster)
-	res := toolparser.ParseGobusterAndSpidersLinks(detectedURLstring)
-	// fmt.Println("******\r\n",gobuster)
-	// fmt.Println("******\r\n",res)
 
-	////////////////////////////////////////////////////////////////////////////////////////
-	// fmt.Println("res = ", res)
-	// strCont, err := u.StringToLines(res)
-	// if err != nil {
-	// 	log.Println("Failed while separating lines in formatted tool output")
-	// }
-	// pdf = h.singlelinetable(pdf, strCont)
+	var detectedURLstring string = u.ReturnFileContentsStr(detectedURLsURL)
+
+	res := toolparser.ParseGobusterAndSpidersLinks(detectedURLstring)
+
 	pdf = h.examplemultiwraptable(pdf, res)
 	return pdf
 }
@@ -830,8 +688,7 @@ func (h *pdfHandler) sqlmaptable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 }
 
 func (h *pdfHandler) nmapbannertable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-	//	nmap banner grabbing
-	//	nmap -p- -Pn -vv -sTV -T5 --script=banner -oA /root/Desktkop/nmap-banners 192.168.1.20
+
 	pdf.AddPage()
 
 	pdf.SetFont(fontname, "B", 14)
@@ -850,8 +707,7 @@ func (h *pdfHandler) nmapbannertable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 
 func (h *pdfHandler) nmapComments_MAYBE_table(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-	// BELOW or nmap -p80 --script=http-* -oN .. 192.168.1.20
-	// nmap -p80 --script=http-comments-displayer 192.168.1.20 -oN ouptputdir+'/nmap-comments-displayer'
+
 	pdf.AddPage()
 
 	pdf.SetFont(fontname, "B", 14)
@@ -910,7 +766,7 @@ func (h *pdfHandler) httpmethodstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40,10, "HTTP: Method - Status")
-											//	@TODO	Add	-	Check: httptesting.txt")
+
 	pdf.Ln(-1)
 
 
@@ -928,7 +784,7 @@ func (h *pdfHandler) robotstxttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40,10, "Contents of /robots.txt")
-											//	@TODO	Add	-	Check: httptesting.txt")
+
 	pdf.Ln(-1)
 
 	var robotstxtOutURL string = path.Join(h.foldername, "/getrobots.txt")
@@ -942,6 +798,7 @@ func (h *pdfHandler) robotstxttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) whatwebtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
+	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40, 10, "whatweb Table")
 	pdf.Ln(-1)
 	return nil
@@ -951,6 +808,7 @@ func (h *pdfHandler) wpscantable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	// @TODO	tool output is a folder		Consider just using a str for this
 	// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
 	pdf.AddPage()
+	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40, 10, "WPScan Table")
 	pdf.Ln(-1)
 
@@ -965,28 +823,22 @@ func (h *pdfHandler) wpscantable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) xsstriketable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
-	var reflectedoutputURL string = path.Join(h.foldername, "python3_out")//"/xsstrike.txt")//	"/form_injection_detection.txt")
+	var reflectedoutputURL string = path.Join(h.foldername, "xsstrike_out")//"/xsstrike.txt")//	"/form_injection_detection.txt")
 	var reflectedoutputstring string = u.ReturnFileContentsStr(reflectedoutputURL)
 	res := toolparser.ParseXSStrikeOutput(reflectedoutputstring)
 
-	// for _,i := range res {
-	// 	fmt.Println("=>",i)
-	// }
 	if len(res) > 0 {
 		pdf.AddPage()
+		pdf.SetFont(fontname, "B", 14)
 		pdf.Cell(40, 10, "XSStrike Table")
 		pdf.Ln(-1)
 
 		pdf = h.examplemultiwraptable(pdf, res)
 	}
-	// fmt.Println("STRIKE")
-	// os.Exit(1)
 	return pdf
 }
 
 func (h *pdfHandler) reflectedoutputtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-					//	@TODO	tool output is a folder		Consider just using a str for this
-				// h.execCmd(h.e.tools["wpscan"] + " -o " + filepath.ToSlash(path.Join(h.e.outputFolder, "/wpscan-out")) + " --url " + h.e.targetHost)
 
 	var reflectedoutputURL string = path.Join(h.foldername, "/reflected_strings_and_urls.txt")
 	var reflectedoutputstring string = u.ReturnFileContentsStr(reflectedoutputURL)
@@ -994,6 +846,7 @@ func (h *pdfHandler) reflectedoutputtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	if len(res) > 0 {
 		pdf.AddPage()
+		pdf.SetFont(fontname, "B", 14)
 		pdf.Cell(40, 10, "User Controlled - Reflected Output Table")
 		pdf.Ln(-1)
 	
@@ -1005,6 +858,7 @@ func (h *pdfHandler) reflectedoutputtable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 func (h *pdfHandler) seleniumxsstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	pdf.AddPage()
+	pdf.SetFont(fontname, "B", 14)
 	pdf.Cell(40, 10, "XSS - Selenium Testing Table")
 	pdf.Ln(-1)
 
@@ -1037,14 +891,6 @@ func (h *pdfHandler) seleniumxsstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 	return pdf
 }
 
-// func (h *pdfHandler) injectiontesttable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
-// 	pdf.AddPage()
-// 	pdf.Cell(40, 10, "Injection Testing Table")
-// 	pdf.Ln(-1)
-
-// 	return nil
-// }
-
 func (h *pdfHandler) subdomainstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	var gobusterSubdomainsOutURL string = path.Join(h.foldername, "/gobuster-Subdomains")
@@ -1053,6 +899,7 @@ func (h *pdfHandler) subdomainstable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	if len(res) > 0 {
 		pdf.AddPage()
+		pdf.SetFont(fontname, "B", 14)
 		pdf.Cell(40, 10, "Subdomain Enumeration Output Table")
 		pdf.Ln(-1)
 	
@@ -1070,6 +917,7 @@ func (h *pdfHandler) cvetable(pdf *gofpdf.Fpdf) *gofpdf.Fpdf {
 
 	if len(res) > 0 {
 		pdf.AddPage()
+		pdf.SetFont(fontname, "B", 14)
 		pdf.Cell(40, 10, "CVEs Retrieved from NIST NVD")
 		pdf.Ln(-1)
 
@@ -1116,71 +964,6 @@ func (h *pdfHandler) examplemultiwraptable(pdf *gofpdf.Fpdf, tbl []string) *gofp
 	var rowlength int = 112
 
 	for _,tblrow := range tbl {
-		// fmt.Println(tblrow)
-		// columnWidth := (columnWidthFraction * usablePageWidth) - 2 // -2 for table margins
-/*
-		if len(string(tblrow)) > rowlength {		//	@TODO - Consider removing the if-else statement. if already handles the situation
-			fmt.Println("HEYYEA")
-			// splitStrings := pdf.SplitText(string(tblrow), columnWidth)
-			// // if newHeight := float64(len(splitStrings)) * float64(lineHeight); newHeight > maxHeight {
-			// // 	maxHeight = newHeight
-			// // }
-			var splitStrings []string
-			// var previni int
-			// // var newini int
-
-			// for ri, rv := range tblrow {
-			// 	fmt.Println(rv)
-			// 	// res = res + string(rv)
-			// 	// fmt.Printf("i%d r %c\n", i, r)
-			// 	fmt.Println("ri----------------------------")
-			// 	if ri > 0 && (ri+1)%80 == 0 {
-			// 		// fmt.Printf("=>(%d) '%v'\n", i, res)
-			// 		// res = ""
-			// 		fmt.Println("APPENDING AT ri",ri)
-			// 		splitStrings = append(splitStrings, string(rv)[previni:ri])
-			// 		fmt.Println("PREV ri",ri)
-			// 		previni=ri
-			// 	}
-			// }
-
-			splitStrings = slicetolength(tblrow,rowlength)
-
-			var len int = len(splitStrings)
-			// for n,cellContent := range splitStrings {
-			// 	fmt.Println(cellContent)
-				
-			// 	if n==len {	//	@CHECK HERE
-			// 		fmt.Println("EQUAL")
-			// 		pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
-			// 			cellContent, "LRB", 0, "L", false, 0, "")	//	LR was "1"			
-			// 	} else {
-			// 		fmt.Println("N")
-			// 		pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
-			// 			cellContent, "LRB", 0, "L", false, 0, "")	//	LR was "1"
-			// 	}
-			// 	// fmt.Println("=====",n,"====",ns)
-			// 	pdf.Ln(-1)
-			// }
-			for i:=0; i<len; i++ {
-
-				if i == (len-1) {	//	It is the last
-					pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
-						splitStrings[i], "LRB", 0, "L", false, 0, "")	//	LR was "1"
-				} else {			//	It is not the last
-					pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
-						splitStrings[i], "LR", 0, "L", false, 0, "")	//	LR was "1"
-				}
-				pdf.Ln(-1)
-			}
-		} else {
-			fmt.Println("NOOOOO")
-			// splitStrings := pdf.SplitText(string(tblrow), columnWidth)
-			pdf.CellFormat(columnWidthFraction*usablePageWidth, cellHeight,		//	maxHeight instead of cellHeight
-				tblrow, "1", 0, "L", false, 0, "")
-			pdf.Ln(-1)
-		}
-*/
 		var splitStrings []string
 		splitStrings = slicetolength(tblrow,rowlength)
 
@@ -1224,59 +1007,3 @@ func slicetolength(s string, piecesize int) []string {
     }
     return pieces
 }
-
-/*
-func (h *pdfHandler) examplewraprowtable(pdf *gofpdf.Fpdf, tblrow []string) *gofpdf.Fpdf {
-	var columnWidthFraction float64 = 1.0
-	_, lineHeight := pdf.GetFontSize()
-
-	pageWidth,_ := pdf.GetPageSize()
-	margin,_,_,_ := pdf.GetMargins()
-
-	usablePageWidth := pageWidth - 2*margin
-
-	var maxHeight float64
-
-	for _, cellContent := range tblrow {
-		columnWidth := (columnWidthFraction * usablePageWidth) - 2 // -2 for table margins
-
-		splitStrings := pdf.SplitText(cellContent, columnWidth)
-		if newHeight := float64(len(splitStrings)) * float64(lineHeight); newHeight > maxHeight {
-			maxHeight = newHeight
-		}
-	}
-
-	for _, cellContent := range tblrow {
-		pdf.CellFormat(columnWidthFraction*usablePageWidth, maxHeight,
-			cellContent, "1", 0, "L", false, 0, "")
-			pdf.Ln(-1)
-	}
-	return pdf
-}
-*/
-
-// fmt.Println("LINE IS:",string(line))
-// //	@NOW
-// var tablelinesize int = 80
-// if l>tablelinesize {
-// 	var rownumber int = l/tablelinesize
-// 	fmt.Println("ROW IS", rownumber)
-// 	//var lastline int = l%tablelinesize
-// 	var ini,fin int
-// 	for i:=0; i<rownumber; i++ {
-// 		ini = i*rownumber
-// 		fin = (i+1)*rownumber
-// 		fmt.Println("l", l)
-// 		fmt.Println("INI", ini)
-// 		fmt.Println("FIN", fin)
-// 		fmt.Println(string(line[ini:fin]))
-// 		pdf.CellFormat(195, 7, string(line[ini:fin]), "1", 0, "LM", true, 0, "")
-// 	}
-// 	if (l%tablelinesize != 0) {
-// 		pdf.CellFormat(195, 7, string(line[fin:]), "1", 0, "LM", true, 0, "")
-// 		fmt.Println(string(line[fin:]))
-// 	}
-// } else {
-// 	//	@PREVIOUS
-// 	pdf.CellFormat(195, 7, string(line), "1", 0, "LM", true, 0, "")
-// }

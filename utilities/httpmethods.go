@@ -1,3 +1,22 @@
+// Package utilites holds package agnostic functions.
+// httpmethods.go defines an Agent struct, which can be used to perform
+// http requests.
+//
+// Example calls can be seen below:
+// host := "http://192.168.1.20"
+// port := 80
+// // var tar string = host + ":" + string(port)
+// var tar string = host + ":" + strconv.Itoa(port)
+// var u utilities.Utils
+// u.EncodingTest()
+// fmt.Println("-------------")
+// var a utilities.Agent
+// //a.Robots("http://www.google.com")
+// //a.Head("http://192.168.1.20")
+// //a.OptionsRequest("http://192.168.1.20")
+// //a.OptionsVerify("http://192.168.1.20")
+// a.OptionsVerify(tar)
+// fmt.Println("-------------")
 package utilities
 
 import (
