@@ -12,7 +12,7 @@ Run all checks
 ```
 ~/go/src/github.com/ren-zxcyq/nier# go install
 # ~/go/bin/nier -host 192.168.1.20 -o ~/Desktop/report -sess "PHPSESSID:g47sf085b2hq5hv3871pdtuo11;SecretCookie:VzuuL2gfLJWNnTSwn2kuLv5wo20vBwpjAGWwLJD2LwDkAJL0ZwplLmR5BQMuLGyuAGOuA2ZmBwR1Amt2AmH1ZGV" -all -cve
-
+```
 
 ## Usage
 ```
