@@ -2,6 +2,8 @@
 
 ## Installation
 ```
+Run install.sh	(Experimental)
+and then:
 go get github.com/ren-zxcyq/nier
 go install github.com/ren-zxcyq/nier
 ```
