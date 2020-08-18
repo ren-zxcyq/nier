@@ -6,7 +6,6 @@ require (
 	github.com/OJ/gobuster/v3 v3.0.2-0.20200625223419-372f640b754c
 	github.com/PuerkitoBio/goquery v1.5.2-0.20200801233231-6f0f9d6b87b3
 	github.com/corona10/goimagehash v1.0.2 // indirect
-	github.com/creack/pty v1.1.11
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/jung-kurt/gofpdf v1.16.2
